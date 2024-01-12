@@ -201,5 +201,17 @@
         "valueType": "string"
       }
     ]
+  },
+  {
+    "id": "form",
+    "fields": [
+      {
+        "component": "text-input",
+        "valueType": "string",
+        "name": "rootPath",
+        "value": "",
+        "label": "Root Path"
+      }
+    ]
   }
 ]

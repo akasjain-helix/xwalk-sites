@@ -63,6 +63,20 @@
               }
             }
           }
+        },
+        {
+          "title": "Adaptive Form - Embed",
+          "id": "form",
+          "plugins": {
+            "aem": {
+              "page": {
+                "resourceType": "core/franklin/components/aemform/v1/aemform",
+                "template": {
+                  "rootPath": "/content/forms/af/..."
+                }
+              }
+            }
+          }
         }
       ]
     },
