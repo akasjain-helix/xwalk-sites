@@ -1,5 +1,8 @@
+#mountpoints:
+#  /:
+#    url: "http://localhost:3030"
+#    type: "markup"
+#    suffix: ""
 mountpoints:
   /:
-    url: "http://localhost:3030"
-    type: "markup"
-    suffix: ""
+    url: https://drive.google.com/drive/folders/1TymOptq2I0u0qlsmIMtyicccap6DnvIS
