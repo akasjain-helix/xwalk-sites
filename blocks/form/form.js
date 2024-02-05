@@ -248,7 +248,7 @@ function renderField(fd) {
 }
 
 export async function generateFormRendition(panel, container) {
-  const { items = [] } = panel;
+  const items = panel.items.length > 0 ? panel.items : Object.keys(panel.data).map(function(k) { return panel.data[k] });
   const promises = [];
   items.forEach((field) => {
     field.value = field.value ?? '';
