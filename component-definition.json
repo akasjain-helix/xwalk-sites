@@ -70,7 +70,7 @@
           "plugins": {
             "aem": {
               "page": {
-                "resourceType": "core/franklin/components/aemform/v1/aemform",
+                "resourceType": "core/franklin/components/embedform/v1/embedform",
                 "template": {
                   "rootPath": "/content/forms/af/..."
                 }
