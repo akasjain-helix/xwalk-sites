@@ -66,7 +66,7 @@
         },
         {
           "title": "Adaptive Form - Embed",
-          "id": "form",
+          "id": "embedform",
           "plugins": {
             "aem": {
               "page": {

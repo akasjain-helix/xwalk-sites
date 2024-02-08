@@ -203,7 +203,7 @@
     ]
   },
   {
-    "id": "form",
+    "id": "embedform",
     "fields": [
       {
         "component": "text-input",
