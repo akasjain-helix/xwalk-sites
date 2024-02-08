@@ -1174,15 +1174,13 @@ class Scriptable extends BaseNode {
                     return 'Object';
                 }
                 prop = prop;
-                if (prop.startsWith('$')) {
+                if (typeof prop === 'string' && prop.startsWith('$')) {
                     const retValue = target.self[prop];
                     if (retValue instanceof BaseNode) {
                         return retValue.getRuleNode();
-                    }
-                    else if (retValue instanceof Array) {
+                    } else if (retValue instanceof Array) {
                         return retValue.map(r => r instanceof BaseNode ? r.getRuleNode() : r);
-                    }
-                    else {
+                    } else {
                         return retValue;
                     }
                 }
@@ -1259,7 +1257,7 @@ class Container extends Scriptable {
     _itemTemplate = null;
     fieldFactory;
     constructor(json, _options) {
-        super(json, { form: _options.form, parent: _options.parent });
+        super(json, { form: _options.form, parent: _options.parent, mode: _options.mode });
         this.fieldFactory = _options.fieldFactory;
     }
     _getDefaults() {
@@ -1369,11 +1367,7 @@ class Container extends Scriptable {
         };
     }
     _createChild(child, options) {
-        const { parent = this } = options;
-        return this.fieldFactory.createField(child, {
-            form: options.form,
-            parent
-        });
+        return this.fieldFactory.createField(child, options);
     }
     walkSiteContainerItems(x) {
         return Object.fromEntries(Object.entries(x[':items']).map(([key, value]) => {
@@ -1425,7 +1419,7 @@ class Container extends Scriptable {
             });
         }
     }
-    _addChild(itemJson, index, cloneIds = false) {
+    _addChild(itemJson, index, cloneIds = false, mode = 'create') {
         let nonTransparentParent = this;
         while (nonTransparentParent != null && nonTransparentParent.isTransparent()) {
             nonTransparentParent = nonTransparentParent.parent;
@@ -1438,7 +1432,7 @@ class Container extends Scriptable {
             index,
             ...deepClone(itemJson, cloneIds ? () => { return form.getUniqueId(); } : undefined)
         };
-        const retVal = this._createChild(itemTemplate, { parent: this, form: this.form });
+        const retVal = this._createChild(itemTemplate, { parent: this, form: this.form, mode });
         itemJson.id = retVal.id;
         this.form.fieldAdded(retVal);
         this._addChildToRuleNode(retVal, { parent: nonTransparentParent });
@@ -1494,7 +1488,7 @@ class Container extends Scriptable {
                         itemTemplate = deepClone(items[i]);
                         itemTemplate.repeatable = undefined;
                     }
-                    child = this._addChild(itemTemplate, undefined, i > this._jsonModel.items.length - 1);
+                    child = this._addChild(itemTemplate, undefined, i > this._jsonModel.items.length - 1, mode);
                 }
                 else {
                     child = this._addChild(this._itemTemplate, undefined, i > this._jsonModel.items.length - 1);
@@ -1511,7 +1505,7 @@ class Container extends Scriptable {
                     this._initializeSiteContainer(item);
                 }
                 else if (this.isAFormField(item)) {
-                    const child = this._addChild(item);
+                    const child = this._addChild(item, undefined, false, mode);
                     child._initialize(mode);
                 }
                 else {
@@ -2862,9 +2856,11 @@ class RuleEngine {
 class Fieldset extends Container {
     constructor(params, _options) {
         super(params, _options);
-        this._applyDefaults();
-        this.queueEvent(new Initialize());
-        this.queueEvent(new ExecuteRule());
+        if (_options.mode !== 'restore') {
+            this._applyDefaults();
+            this.queueEvent(new Initialize());
+            this.queueEvent(new ExecuteRule());
+        }
     }
     _getDefaults() {
         return {
@@ -3204,9 +3200,11 @@ const validTypes = ['string', 'number', 'integer', 'boolean', 'file', 'string[]'
 class Field extends Scriptable {
     constructor(params, _options) {
         super(params, _options);
-        this._applyDefaults();
-        this.queueEvent(new Initialize());
-        this.queueEvent(new ExecuteRule());
+        if (_options.mode !== 'restore') {
+            this._applyDefaults();
+            this.queueEvent(new Initialize());
+            this.queueEvent(new ExecuteRule());
+        }
     }
     _ruleNodeReference = [];
     _initialize() {

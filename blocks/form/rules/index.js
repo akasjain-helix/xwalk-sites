@@ -1,10 +1,29 @@
-import { submitSuccess, submitFailure } from '../submit.js';
-import { createHelpText, createLabel, updateorCreateInvalidMsg } from '../util.js';
+import { submitSuccess, submitFailure, handleSubmit } from '../submit.js';
+import {
+  createHelpText, createLabel, updateOrCreateInvalidMsg, getCheckboxGroupValue,
+} from '../util.js';
+
+function disableElement(el, value) {
+  el.toggleAttribute('disabled', value === true);
+  el.toggleAttribute('aria-readonly', value === true);
+}
+
+function compare(fieldVal, htmlVal, type) {
+  if (type === 'number') {
+    return fieldVal === Number(htmlVal);
+  }
+  if (type === 'boolean') {
+    return fieldVal.toString() === htmlVal;
+  }
+  return fieldVal === htmlVal;
+}
 
 async function fieldChanged(payload, form, generateFormRendition) {
   const { changes, field: fieldModel } = payload;
   changes.forEach((change) => {
-    const { id } = fieldModel;
+    const {
+      id, fieldType, readOnly, type, displayValue, displayFormat,
+    } = fieldModel;
     const { propertyName, currentValue } = change;
     const field = form.querySelector(`#${id}`);
     if (!field) {
@@ -19,85 +38,77 @@ async function fieldChanged(payload, form, generateFormRendition) {
         }
         break;
       case 'validationMessage':
-        if (field.setCustomValidity) {
+        if (field.setCustomValidity && payload.field.expressionMismatch) {
           field.setCustomValidity(currentValue);
-          updateorCreateInvalidMsg(field, currentValue);
+          updateOrCreateInvalidMsg(field, currentValue);
         }
         break;
       case 'value':
-        field.value = currentValue;
-        break;
-      case 'visible':
-        if (currentValue === true) {
-          field.closest('.field-wrapper').dataset.hidden = 'false';
-        } else {
-          field.closest('.field-wrapper').dataset.hidden = 'true';
+        if (['number', 'date'].includes(field.type) && displayFormat) {
+          field.type = 'text';
+          field.value = displayValue;
+          field.setAttribute('edit-value', currentValue);
+          field.setAttribute('display-value', displayValue);
+        } else if (fieldType === 'radio-group' || fieldType === 'checkbox-group') {
+          field.querySelectorAll(`input[name=${id}]`).forEach((el) => {
+            const exists = (Array.isArray(currentValue)
+              && currentValue.some((x) => compare(x, el.value, type.replace('[]', ''))))
+              || compare(currentValue, el.value, type);
+            el.checked = exists;
+          });
+        } else if (fieldType === 'checkbox') {
+          field.checked = compare(currentValue, field.value, type);
+        } else if (field.type !== 'file') {
+          field.value = currentValue;
         }
         break;
+      case 'visible':
+        field.closest('.field-wrapper').dataset.visible = currentValue;
+        break;
       case 'enabled':
-        if (currentValue === true) {
-          if (fieldModel.fieldType === 'radio-group' || fieldModel.fieldType === 'checkbox-group') {
-            document.getElementsByName(id).forEach((el) => {
-              if (fieldModel.readOnly === false) {
-                el.removeAttribute('disabled');
-                el.removeAttribute('aria-readonly');
-              }
+        // If checkboxgroup/radiogroup/drop-down is readOnly then it should remain disabled.
+        if (fieldType === 'radio-group' || fieldType === 'checkbox-group') {
+          if (readOnly === false) {
+            field.querySelectorAll(`input[name=${id}]`).forEach((el) => {
+              disableElement(el, !currentValue);
             });
-          } else if (fieldModel.fieldType === 'drop-down') {
-            if (fieldModel.readOnly === false) {
-              field.removeAttribute('disabled');
-              field.removeAttribute('aria-readonly');
-            }
-          } else {
-            field.removeAttribute('disabled');
           }
-        } else if (fieldModel.fieldType === 'radio-group' || fieldModel.fieldType === 'checkbox-group') {
-          document.getElementsByName(id).forEach((el) => {
-            if (fieldModel.readOnly === false) {
-              el.setAttribute('disabled', 'disabled');
-              el.setAttribute('aria-readonly', true);
-            }
-          });
-        } else if (fieldModel.fieldType === 'drop-down') {
-          if (fieldModel.readOnly === false) {
-            field.setAttribute('disabled', 'disabled');
-            field.setAttribute('aria-readonly', true);
+        } else if (fieldType === 'drop-down') {
+          if (readOnly === false) {
+            disableElement(field, !currentValue);
           }
         } else {
-          field.setAttribute('disabled', 'disabled');
+          field.toggleAttribute('disabled', currentValue === false);
         }
         break;
       case 'readOnly':
-        if (currentValue === true) {
-          if (fieldModel.fieldType === 'radio-group' || fieldModel.fieldType === 'checkbox-group') {
-            document.getElementsByName(id).forEach((el) => {
-              el.setAttribute('disabled', 'disabled');
-              el.setAttribute('aria-readonly', true);
-            });
-          } else if (fieldModel.fieldType === 'drop-down') {
-            field.setAttribute('disabled', 'disabled');
-            field.setAttribute('aria-readonly', true);
-          } else {
-            field.setAttribute('readonly', 'readonly');
-          }
-        } else if (fieldModel.fieldType === 'radio-group' || fieldModel.fieldType === 'checkbox-group') {
-          document.getElementsByName(id).forEach((el) => {
-            el.removeAttribute('disabled');
-            el.removeAttribute('aria-readonly');
+        if (fieldType === 'radio-group' || fieldType === 'checkbox-group') {
+          field.querySelectorAll(`input[name=${id}]`).forEach((el) => {
+            disableElement(el, currentValue);
           });
-        } else if (fieldModel.fieldType === 'drop-down') {
-          field.removeAttribute('disabled');
-          field.removeAttribute('aria-readonly');
+        } else if (fieldType === 'drop-down') {
+          disableElement(field, currentValue);
         } else {
-          field.removeAttribute('readonly');
+          field.toggleAttribute('disabled', currentValue === true);
         }
         break;
       case 'label':
         // eslint-disable-next-line no-case-declarations
-        const labelEl = field.closest('.field-wrapper').querySelector('.field-label');
-        if (labelEl) {
-          labelEl.textContent = currentValue.value;
-          labelEl.setAttribute('data-visible', currentValue.visible);
+        const fieldWrapper = field.closest('.field-wrapper');
+        if (fieldWrapper) {
+          let labelEl = fieldWrapper.querySelector('.field-label');
+          if (labelEl) {
+            labelEl.textContent = currentValue.value;
+            labelEl.setAttribute('data-visible', currentValue.visible);
+          } else if (fieldType === 'button') {
+            field.textContent = currentValue.value;
+          } else if (currentValue.value !== '') {
+            labelEl = createLabel({
+              id,
+              label: currentValue,
+            });
+            fieldWrapper.prepend(labelEl);
+          }
         }
         break;
       case 'description':
@@ -144,24 +155,17 @@ function applyRuleEngine(htmlForm, form, captcha) {
     } = field;
     if ((field.type === 'checkbox' && field.dataset.fieldType === 'checkbox-group')
       || (field.type === 'radio' && field.dataset.fieldType === 'radio-group')) {
-      const val = [];
-      document.getElementsByName(name).forEach((x) => {
-        if (x.checked) {
-          val.push(x.value);
-        }
-      });
+      const val = getCheckboxGroupValue(name, htmlForm);
       const el = form.getElement(name);
       el.value = val;
     } else if (field.type === 'checkbox') {
       form.getElement(id).value = checked ? value : field.dataset.uncheckedValue;
+    } else if (field.type === 'file') {
+      form.getElement(id).value = Array.from(field.files);
     } else {
       form.getElement(id).value = value;
     }
     console.log(JSON.stringify(form.exportData(), null, 2));
-  });
-
-  htmlForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
   });
 
   htmlForm.addEventListener('click', async (e) => {
@@ -178,23 +182,33 @@ function applyRuleEngine(htmlForm, form, captcha) {
   });
 }
 
-export default async function loadRuleEngine(formDef, htmlForm, captcha, generateFormRendition) {
+export default async function loadRuleEngine(formDef, htmlForm, captcha, genFormRendition, data) {
   const ruleEngine = await import('./model/afb-runtime.js');
   const form = ruleEngine.restoreFormInstance(formDef);
+  if (data && Object.keys(data).length > 0) {
+    form.importData(data);
+  }
+
   window.myForm = form;
+  let submitElement;
   htmlForm.addEventListener('submit', (e) => {
     e.preventDefault();
+    submitElement = e.submitter;
+    handleSubmit(e, htmlForm);
   });
+
   form.subscribe((e) => {
-    handleRuleEngineEvent(e, htmlForm, generateFormRendition);
+    handleRuleEngineEvent(e, htmlForm, genFormRendition);
   }, 'fieldChanged');
 
   form.subscribe((e) => {
     handleRuleEngineEvent(e, htmlForm);
+    submitElement.removeAttribute('disabled');
   }, 'submitSuccess');
 
   form.subscribe((e) => {
     handleRuleEngineEvent(e, htmlForm);
+    submitElement.removeAttribute('disabled');
   }, 'submitFailure');
   applyRuleEngine(htmlForm, form, captcha);
 }

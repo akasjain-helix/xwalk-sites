@@ -2,9 +2,9 @@ export default async function initializeRuleEngineWorker(formDef, renderHTMLForm
   if (typeof Worker === 'undefined') {
     const ruleEngine = await import('./model/afb-runtime.js');
     const form = ruleEngine.createFormInstance(formDef);
-    return renderHTMLForm(form.getState(true));
+    return renderHTMLForm(form.getState(true), formDef.data);
   }
-  const myWorker = new Worker('/content/franklin-examples.resource/blocks/form/rules/RuleEngineWorker.js', { type: 'module' });
+  const myWorker = new Worker('/blocks/form/rules/RuleEngineWorker.js', { type: 'module' });
 
   myWorker.postMessage({
     name: 'init',
@@ -16,7 +16,7 @@ export default async function initializeRuleEngineWorker(formDef, renderHTMLForm
     myWorker.addEventListener('message', async (e) => {
       if (e.data.name === 'init') {
         form = await renderHTMLForm(e.data.payload);
-        myWorker.terminate();
+        // myWorker.terminate();
         resolve(form);
       }
     });

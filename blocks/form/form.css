@@ -104,8 +104,8 @@ main .form form .field-invalid {
     font-weight: 700;
 }
 
-main .form input, 
-main .form textarea, 
+main .form input,
+main .form textarea,
 main .form select {
     background-color: var(--form-input-background-color);
     border: var(--form-input-border-size) solid var(--form-input-border-color);
@@ -131,6 +131,8 @@ main .form input[type='radio'] {
     height: 16px;
     flex: none;
     margin: 0;
+    position: static;
+    z-index: 1;
 }
 
 main .form textarea {
@@ -211,6 +213,10 @@ main .form button {
     width: 100%;
 }
 
+main form .form-file-wrapper > button{
+    display: flex;
+}
+
 main .form button:hover {
     background: var(--form-button-background-hover-color);
 }
@@ -242,7 +248,7 @@ main .form-file-wrapper .field-dropregion {
 main .form-file-wrapper .file-description button {
     --form-button-padding: 15px;
 
-    background: url('/icons/delete.svg') no-repeat;
+    background: url('./icons/delete.svg') no-repeat;
     width: unset;
     border: unset;
     text-align: center;
@@ -360,6 +366,7 @@ main .wizard  .current-wizard-step.field-wrapper:last-of-type ~ .form-wizard-but
     }
 
     main .wizard.left > fieldset > legend {
+        display: block !important;
         position: absolute;
         font-size: 1.2rem;
         margin-top: calc(var(--wizard-step-index) * 85px);
@@ -420,3 +427,22 @@ main .form .form-message.error-message {
     border-color: #f5c2c7;
 }
 
+main .form .form-button-wrapper button {
+    cursor:pointer
+}
+
+main .form .form-button-wrapper button:hover {
+    border: 3px solid var(#fff);
+    color: #fff;
+    background-color: var(--button-secondary-color);
+}
+
+main .form .form-button-wrapper button[disabled] {
+    cursor:auto
+}
+
+main .form .form-button-wrapper button[disabled]:hover {
+    border: 3px solid var(--button-secondary-color);
+    color: var(--button-secondary-color);
+    background-color: transparent;
+}

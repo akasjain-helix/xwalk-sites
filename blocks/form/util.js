@@ -44,12 +44,13 @@ export function createLabel(fd, tagName = 'label') {
     const label = document.createElement(tagName);
     label.setAttribute('for', fd.id);
     label.className = 'field-label';
-    if (fd.label.visible !== false) {
-      if (fd.label.richText === true) {
-        label.innerHTML = stripTags(fd.label.value);
-      } else {
-        label.textContent = fd.label.value;
-      }
+    if (fd.label.richText === true) {
+      label.innerHTML = stripTags(fd.label.value);
+    } else {
+      label.textContent = fd.label.value;
+    }
+    if (fd.label.visible === false) {
+      label.dataset.visible = 'false';
     }
     if (fd.Tooltip) {
       label.title = fd.Tooltip;
@@ -70,7 +71,7 @@ export function createFieldWrapper(fd, tagName = 'div', labelFn = createLabel) {
   const fieldId = `form-${renderType}-wrapper${nameStyle}`;
   fieldWrapper.className = fieldId;
   if (fd.visible === false) {
-    fieldWrapper.dataset.hidden = 'true';
+    fieldWrapper.dataset.visible = fd.visible;
   }
   fieldWrapper.classList.add('field-wrapper');
   if (fd.label && fd.label.value && typeof labelFn === 'function') {
@@ -91,6 +92,10 @@ export function createButton(fd) {
   button.classList.add('button');
   button.id = fd.id;
   button.name = fd.name;
+  if (fd.enabled === false) {
+    button.disabled = true;
+    button.setAttribute('disabled', '');
+  }
   wrapper.replaceChildren(button);
   return wrapper;
 }
@@ -125,16 +130,16 @@ export function createHelpText(fd) {
   return div;
 }
 
-export function updateorCreateInvalidMsg(fieldElement, msg) {
+export function updateOrCreateInvalidMsg(fieldElement, msg) {
   const container = getFieldContainer(fieldElement);
   let element = container.querySelector(':scope > .field-description');
   if (!element) {
     element = createHelpText({ id: fieldElement.id });
     container.append(element);
   }
-  if (fieldElement.validationMessage || msg) {
+  if (msg) {
     element.classList.add('field-invalid');
-    element.textContent = fieldElement.validationMessage || msg;
+    element.textContent = msg;
   } else if (container.dataset.description) {
     element.classList.remove('field-invalid');
     element.innerHTML = container.dataset.description;
@@ -142,4 +147,55 @@ export function updateorCreateInvalidMsg(fieldElement, msg) {
     element.remove();
   }
   return element;
+}
+
+export const validityKeyMsgMap = {
+  patternMismatch: 'patternErrorMessage',
+  rangeOverflow: 'maximumErrorMessage',
+  rangeUnderflow: 'minimumErrorMessage',
+  tooLong: 'maxLengthErrorMessage',
+  tooShort: 'minLengthErrorMessage',
+  valueMissing: 'requiredErrorMessage',
+};
+
+export function getCheckboxGroupValue(name, htmlForm) {
+  const val = [];
+  htmlForm.querySelectorAll(`input[name="${name}"]`).forEach((x) => {
+    if (x.checked) {
+      val.push(x.value);
+    }
+  });
+  return val;
+}
+function updateRequiredCheckboxGroup(name, htmlForm) {
+  const checkboxGroup = htmlForm.querySelectorAll(`input[name="${name}"]`) || [];
+  const value = getCheckboxGroupValue(name, htmlForm);
+  checkboxGroup.forEach((checkbox) => {
+    if (checkbox.checked || !value.length) {
+      checkbox.setAttribute('required', true);
+    } else {
+      checkbox.removeAttribute('required');
+    }
+  });
+}
+
+export function checkValidation(fieldElement) {
+  const wrapper = fieldElement.closest('.field-wrapper');
+  const isCheckboxGroup = fieldElement.dataset.fieldType === 'checkbox-group';
+  const required = wrapper?.dataset?.required;
+  if (isCheckboxGroup && required === 'true') {
+    updateRequiredCheckboxGroup(fieldElement.name, fieldElement.form);
+  }
+  let hasError = false;
+  Object.keys(validityKeyMsgMap).forEach((key) => {
+    if (fieldElement.validity[key]) {
+      const message = (wrapper.dataset[validityKeyMsgMap[key]] || fieldElement.validationMessage);
+      updateOrCreateInvalidMsg(fieldElement, message);
+      hasError = true;
+    }
+  });
+
+  if (!hasError && fieldElement.type !== 'file') {
+    updateOrCreateInvalidMsg(fieldElement, '');
+  }
 }

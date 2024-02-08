@@ -1,0 +1,8 @@
+{
+ "mappings":[
+  "/content/franklin-examples/:/"
+ ],
+ "includes":[
+  "/content/franklin-examples/"
+ ]
+}
