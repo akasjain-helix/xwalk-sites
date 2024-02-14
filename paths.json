@@ -1,10 +1,8 @@
 {
  "mappings":[
-  "/content/franklin-examples/:/",
-  "/content/aj_site/:/"
+    "/:/"
  ],
  "includes":[
-  "/content/franklin-examples/",
-  "/content/franklin-aj_site/"
+    "/content"
  ]
 }
