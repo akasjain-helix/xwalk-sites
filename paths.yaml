@@ -1,7 +1,5 @@
 mappings:
- - /content/franklin-examples/:/
- - /content/aj_site/:/
+  - /:/
 
 includes:
- - /content/franklin-examples/
- - /content/aj_site/
+  - /content
