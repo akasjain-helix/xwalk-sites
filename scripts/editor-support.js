@@ -18,7 +18,7 @@ async function handleEditorUpdate(event) {
   const blockResource = block?.getAttribute('data-aue-resource');
   if (!block || !blockResource?.startsWith(connectionPrefix)) return;
 
-  const updates = detail?.responseData?.updates;
+  const updates = detail?.response?.updates;
   if (updates.length > 0) {
     const { content } = updates[0];
     const newBlockDocument = new DOMParser().parseFromString(content, 'text/html');
