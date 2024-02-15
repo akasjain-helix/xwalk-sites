@@ -21,21 +21,27 @@ async function handleEditorUpdate(event) {
   const updates = detail?.response?.updates;
   if (updates.length > 0) {
     const { content } = updates[0];
-    const newBlockDocument = new DOMParser().parseFromString(content, 'text/html');
-    const newBlock = newBlockDocument?.querySelector(`[data-aue-resource="${blockResource}"]`);
-    if (newBlock) {
-      newBlock.style.display = 'none';
-      block.insertAdjacentElement('afterend', newBlock);
-      // decorate buttons and icons
-      decorateButtons(newBlock);
-      decorateIcons(newBlock);
-      // decorate and load the block
-      decorateBlock(newBlock);
-      await loadBlock(newBlock);
-      // remove the old block and show the new one
-      block.remove();
-      newBlock.style.display = null;
+    if(content) {
+      const newBlockDocument = new DOMParser().parseFromString(content, 'text/html');
+      const newBlock = newBlockDocument?.querySelector(`[data-aue-resource="${blockResource}"]`);
+      if (newBlock) {
+        newBlock.style.display = 'none';
+        block.insertAdjacentElement('afterend', newBlock);
+        // decorate buttons and icons
+        decorateButtons(newBlock);
+        decorateIcons(newBlock);
+        // decorate and load the block
+        decorateBlock(newBlock);
+        await loadBlock(newBlock);
+        // remove the old block and show the new one
+        block.remove();
+        newBlock.style.display = null;
+      }
+    } else {
+      await loadBlock(block);
+      //decorateBlock(block);
     }
+
   }
 }
 
