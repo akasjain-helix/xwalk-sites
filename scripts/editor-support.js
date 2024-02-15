@@ -18,30 +18,34 @@ async function handleEditorUpdate(event) {
   const blockResource = block?.getAttribute('data-aue-resource');
   if (!block || !blockResource?.startsWith(connectionPrefix)) return;
 
+  if(block.hasAttribute('data-aue-model') && block.getAttribute('data-aue-model') == 'embedform') {
+    block.innerHTML = `<a href="${detail?.patch?.value}"> </a>`;
+    block.dataset.blockStatus = '';
+    decorateBlock(newBlock);
+    await loadBlock(newBlock);
+    // remove the old block and show the new one
+    //block.remove();
+    return;
+  }
+
   const updates = detail?.response?.updates;
   if (updates.length > 0) {
     const { content } = updates[0];
-    if(content) {
-      const newBlockDocument = new DOMParser().parseFromString(content, 'text/html');
-      const newBlock = newBlockDocument?.querySelector(`[data-aue-resource="${blockResource}"]`);
-      if (newBlock) {
-        newBlock.style.display = 'none';
-        block.insertAdjacentElement('afterend', newBlock);
-        // decorate buttons and icons
-        decorateButtons(newBlock);
-        decorateIcons(newBlock);
-        // decorate and load the block
-        decorateBlock(newBlock);
-        await loadBlock(newBlock);
-        // remove the old block and show the new one
-        block.remove();
-        newBlock.style.display = null;
-      }
-    } else {
-      await loadBlock(block);
-      //decorateBlock(block);
+    const newBlockDocument = new DOMParser().parseFromString(content, 'text/html');
+    const newBlock = newBlockDocument?.querySelector(`[data-aue-resource="${blockResource}"]`);
+    if (newBlock) {
+      newBlock.style.display = 'none';
+      block.insertAdjacentElement('afterend', newBlock);
+      // decorate buttons and icons
+      decorateButtons(newBlock);
+      decorateIcons(newBlock);
+      // decorate and load the block
+      decorateBlock(newBlock);
+      await loadBlock(newBlock);
+      // remove the old block and show the new one
+      block.remove();
+      newBlock.style.display = null;
     }
-
   }
 }
 
