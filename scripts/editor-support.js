@@ -10,7 +10,7 @@ const connectionPrefix = 'urn:aemconnection:';
 async function handleEditorUpdate(event) {
   const { detail } = event;
 
-  const resource = detail?.requestData?.target?.resource;
+  const resource = detail?.request?.target?.resource;
   if (!resource) return;
 
   const element = document.querySelector(`[data-aue-resource="${resource}"]`);
