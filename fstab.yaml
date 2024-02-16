@@ -1,8 +1,3 @@
 mountpoints:
   /:
-    url: "https://author-p10652-e192853-cmstg.adobeaemcloud.com/bin/franklin.delivery/akasjain-helix/xwalk-sites/main"
-    type: "markup"
-    suffix: ".html?wcmmode=disabled"
-#mountpoints:
-#  /:
-#    url: https://drive.google.com/drive/folders/1W6ltJcW1k3n6sPSNqEL0otHV8k3zI_T5
+    url: https://drive.google.com/drive/folders/1W6ltJcW1k3n6sPSNqEL0otHV8k3zI_T5
