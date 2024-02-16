@@ -42,6 +42,6 @@
     "stylelint-config-standard": "30.0.1"
   },
   "dependencies": {
-    "crosswalk-converter": "github:buuhuu/crosswalk-converter"
+    "crosswalk-converter": "github:jalagari/crosswalk-converter"
   }
 }

@@ -35,7 +35,7 @@ function createButton(label, icon) {
 }
 
 function insertRemoveButton(fieldset, wrapper, form) {
-  const removeButton = createButton('Remove', 'remove');
+  const removeButton = createButton('', 'remove');
   removeButton.addEventListener('click', () => {
     fieldset.remove();
     wrapper.querySelector('.item-add').setAttribute('data-visible', 'true');

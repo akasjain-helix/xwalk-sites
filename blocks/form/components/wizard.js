@@ -15,6 +15,7 @@ export class WizardLayout {
 
   assignIndexToSteps(panel) {
     const steps = this.getSteps(panel);
+    panel.style.setProperty('--wizard-step-count', steps.length);
     steps.forEach((step, index) => {
       step.dataset.index = index;
       step.style.setProperty('--wizard-step-index', index);
@@ -103,7 +104,7 @@ export class WizardLayout {
     panel.append(wrapper);
     panel.querySelector('fieldset')?.classList.add('current-wizard-step');
     panel.classList.add('wizard');
-    panel.classList.add('left');
+    // panel.classList.add('left');
   }
 }
 
@@ -111,6 +112,7 @@ const layout = new WizardLayout();
 
 export default function wizardLayout(panel) {
   layout.applyLayout(panel);
+  return panel;
 }
 
 export const navigate = layout.navigate.bind(layout);

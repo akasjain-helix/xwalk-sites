@@ -13,14 +13,5 @@ function getFullName(firstname, lastname) {
   return firstname.concat(' ').concat(lastname);
 }
 
-/**
- * Get Placeholder Value
- * @name getPlaceholderValue Puts placeholder value
- * @return {string}
- */
-function getPlaceholderValue() {
-  return 'this will have fullname';
-}
-
 // eslint-disable-next-line import/prefer-default-export
-export { getFullName, getPlaceholderValue };
+export { getFullName };

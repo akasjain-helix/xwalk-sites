@@ -101,16 +101,16 @@ export function createButton(fd) {
 }
 
 // create a function to measure performance of another function
-export function perf(fn) {
-  return (...args) => {
-    const start = performance.now();
-    const result = fn(...args);
-    const end = performance.now();
-    // eslint-disable-next-line no-console
-    console.log(`${fn.name} took ${end - start} milliseconds.`);
-    return result;
-  };
-}
+// export function perf(fn) {
+//   return (...args) => {
+//     const start = performance.now();
+//     const result = fn(...args);
+//     const end = performance.now();
+//     // eslint-disable-next-line no-console
+//     console.log(`${fn.name} took ${end - start} milliseconds.`);
+//     return result;
+//   };
+// }
 
 function getFieldContainer(fieldElement) {
   const wrapper = fieldElement?.closest('.field-wrapper');
@@ -138,15 +138,19 @@ export function updateOrCreateInvalidMsg(fieldElement, msg) {
     container.append(element);
   }
   if (msg) {
-    element.classList.add('field-invalid');
+    container.classList.add('field-invalid');
     element.textContent = msg;
   } else if (container.dataset.description) {
-    element.classList.remove('field-invalid');
+    container.classList.remove('field-invalid');
     element.innerHTML = container.dataset.description;
   } else if (element) {
     element.remove();
   }
   return element;
+}
+
+function removeInvalidMsg(fieldElement) {
+  return updateOrCreateInvalidMsg(fieldElement, '');
 }
 
 export const validityKeyMsgMap = {
@@ -167,6 +171,7 @@ export function getCheckboxGroupValue(name, htmlForm) {
   });
   return val;
 }
+
 function updateRequiredCheckboxGroup(name, htmlForm) {
   const checkboxGroup = htmlForm.querySelectorAll(`input[name="${name}"]`) || [];
   const value = getCheckboxGroupValue(name, htmlForm);
@@ -186,16 +191,15 @@ export function checkValidation(fieldElement) {
   if (isCheckboxGroup && required === 'true') {
     updateRequiredCheckboxGroup(fieldElement.name, fieldElement.form);
   }
-  let hasError = false;
-  Object.keys(validityKeyMsgMap).forEach((key) => {
-    if (fieldElement.validity[key]) {
-      const message = (wrapper.dataset[validityKeyMsgMap[key]] || fieldElement.validationMessage);
-      updateOrCreateInvalidMsg(fieldElement, message);
-      hasError = true;
-    }
-  });
-
-  if (!hasError && fieldElement.type !== 'file') {
-    updateOrCreateInvalidMsg(fieldElement, '');
+  if (fieldElement.validity.valid && fieldElement.type !== 'file') {
+    removeInvalidMsg(fieldElement);
+    return;
   }
+
+  const [invalidProperty] = Object.keys(validityKeyMsgMap)
+    .filter((state) => fieldElement.validity[state]);
+
+  const message = wrapper.dataset[validityKeyMsgMap[invalidProperty]]
+  || fieldElement.validationMessage;
+  updateOrCreateInvalidMsg(fieldElement, message);
 }

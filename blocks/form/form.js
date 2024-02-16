@@ -5,15 +5,15 @@ import {
   stripTags,
   checkValidation,
 } from './util.js';
-import loadRuleEngine from './rules/index.js';
-import initializeRuleEngineWorker from './rules/worker.js';
 import GoogleReCaptcha from './integrations/recaptcha.js';
-
-import fileDecorate from './file.js';
-import registerCustomFunctions from './rules/functionRegistration.js';
+import componentDecorater from './mappings.js';
+import DocBasedFormToAF from './transform.js';
+import transferRepeatableDOM from './components/repeat.js';
+import { handleSubmit } from './submit.js';
 
 export const DELAY_MS = 0;
 let captchaField;
+let afModule;
 
 const withFieldWrapper = (element) => (fd) => {
   const wrapper = createFieldWrapper(fd);
@@ -31,7 +31,7 @@ const constraintsDef = Object.entries({
   'password|tel|email|text': [['maxLength', 'maxlength'], ['minLength', 'minlength'], 'pattern'],
   'number|range|date': [['maximum', 'Max'], ['minimum', 'Min'], 'step'],
   file: ['accept', 'Multiple'],
-  fieldset: [['maxOccur', 'data-max'], ['minOccur', 'data-min']],
+  panel: [['maxOccur', 'data-max'], ['minOccur', 'data-min']],
 }).flatMap(([types, constraintDef]) => types.split('|')
   .map((type) => [type, constraintDef.map((cd) => (Array.isArray(cd) ? cd : [cd, cd]))]));
 
@@ -104,7 +104,7 @@ const createSelect = withFieldWrapper((fd) => {
 function createRadioOrCheckbox(fd) {
   const wrapper = createFieldWrapper(fd);
   const input = createInput(fd);
-  const [value, uncheckedValue] = fd.enum;
+  const [value, uncheckedValue] = fd.enum || [];
   input.value = value;
   if (typeof uncheckedValue !== 'undefined') {
     input.dataset.uncheckedValue = uncheckedValue;
@@ -123,6 +123,10 @@ function createFieldSet(fd) {
   wrapper.name = fd.name;
   if (fd.fieldType === 'panel') {
     wrapper.classList.add('form-panel-wrapper');
+  }
+  if (fd.repeatable === 'true') {
+    setConstraints(wrapper, fd);
+    wrapper.dataset.repeatable = true;
   }
   return wrapper;
 }
@@ -176,13 +180,6 @@ function createPlainText(fd) {
   return wrapper;
 }
 
-function createFileField(fd) {
-  const field = createFieldWrapper(fd);
-  field.append(createInput(fd));
-  fileDecorate(field, fd);
-  return field;
-}
-
 const fieldRenderers = {
   'drop-down': createSelect,
   'plain-text': createPlainText,
@@ -193,7 +190,6 @@ const fieldRenderers = {
   radio: createRadioOrCheckbox,
   'radio-group': createRadioOrCheckboxGroup,
   'checkbox-group': createRadioOrCheckboxGroup,
-  file: createFileField,
 };
 
 async function fetchForm(pathname) {
@@ -261,29 +257,11 @@ function inputDecorator(field, element) {
     if (field.maxItems) {
       input.dataset.maxItems = field.maxItems;
     }
-    if (field.maxFileSize && !Number.isNaN(Number(field.maxFileSize))) {
+    if (field.maxFileSize) {
       input.dataset.maxFileSize = field.maxFileSize;
     }
     setConstraintsMessage(element, field.constraintMessages);
     element.dataset.required = field.required;
-  }
-}
-
-const layoutDecorators = [
-  [(panel) => {
-    const { ':type': type = '' } = panel;
-    return type.endsWith('wizard');
-  }, 'wizard'],
-];
-
-async function applyLayout(panel, element) {
-  const result = layoutDecorators.find(([predicate]) => predicate(panel));
-  if (result) {
-    const module = await import(`./layout/${result[1]}.js`);
-    if (module && module.default) {
-      const layoutFn = module.default;
-      await layoutFn(element);
-    }
   }
 }
 
@@ -301,32 +279,58 @@ function renderField(fd) {
     field.append(createHelpText(fd));
     field.dataset.description = fd.description; // In case overriden by error message
   }
+  if (fd.fieldType !== 'radio-group' && fd.fieldType !== 'checkbox-group') {
+    inputDecorator(fd, field);
+  }
   return field;
 }
 
 export async function generateFormRendition(panel, container) {
-  const items = panel.items.length > 0 ? panel.items : Object.keys(panel.data).map(function(k) { return panel.data[k] });
-  const promises = [];
-  items.forEach((field) => {
+  const { items = [] } = panel;
+  const promises = items.map(async (field) => {
     field.value = field.value ?? '';
     const { fieldType } = field;
     if (fieldType === 'captcha') {
       captchaField = field;
     } else {
       const element = renderField(field);
-      if (field.fieldType !== 'radio-group' && field.fieldType !== 'checkbox-group') {
-        inputDecorator(field, element);
-      }
       colSpanDecorator(field, element);
-      container.append(element);
+      const decorator = await componentDecorater(field);
       if (field?.fieldType === 'panel') {
-        promises.push(generateFormRendition(field, element));
+        await generateFormRendition(field, element);
+        return element;
       }
+      if (typeof decorator === 'function') {
+        return decorator(element, field);
+      }
+      return element;
     }
+    return null;
   });
 
-  await Promise.all(promises);
-  await applyLayout(panel, container);
+  const children = await Promise.all(promises);
+  container.append(...children.filter((_) => _ != null));
+  const decorator = await componentDecorater(panel);
+  if (typeof decorator === 'function') {
+    return decorator(container, panel);
+  }
+  return container;
+}
+
+function enableValidation(form) {
+  form.querySelectorAll('input,textarea,select').forEach((input) => {
+    input.addEventListener('invalid', (event) => {
+      checkValidation(event.target);
+    });
+  });
+
+  form.addEventListener('change', (event) => {
+    const { validity } = event.target;
+    if (validity.valid) {
+      // only to remove the error message
+      checkValidation(event.target);
+    }
+  });
 }
 
 export async function createForm(formDef, data) {
@@ -343,48 +347,33 @@ export async function createForm(formDef, data) {
     captcha.loadCaptcha(form);
   }
 
-  form.addEventListener('change', (event) => {
-    checkValidation(event.target);
-  });
+  enableValidation(form);
+  transferRepeatableDOM(form);
 
-  window.setTimeout(async () => {
-    loadRuleEngine(formDef, form, captcha, generateFormRendition, data);
-  }, DELAY_MS);
+  if (afModule) {
+    window.setTimeout(async () => {
+      afModule.loadRuleEngine(formDef, form, captcha, generateFormRendition, data);
+    }, DELAY_MS);
+  }
+
+  form.addEventListener('submit', (e) => {
+    handleSubmit(e, form);
+  });
 
   return form;
 }
 
-async function fetchData({ id }) {
-  try {
-    const { search = '' } = window.location;
-    const response = await fetch(`/adobe/forms/af/data/${id}${search}`);
-    const json = await response.json();
-    if (json && json?.data) {
-      const { data } = json;
-      if (data && data.afData) {
-        const { afData } = data;
-        if (afData && afData.afBoundData) {
-          return afData.afBoundData;
-        }
-      }
-      return data;
-    }
-    return json;
-  } catch (ex) {
-    return null;
-  }
+function isDocumentBasedForm(formDef) {
+  return formDef?.[':type'] === 'sheet' && formDef?.data;
 }
 
 export default async function decorate(block) {
   let container = block.querySelector('a[href$=".json"]');
   let formDef;
+  let pathname;
   if (container) {
-    const { pathname } = new URL(container.href);
-    if(window.location.host === new URL(container.href).host) {
-      formDef = await fetchForm(pathname);
-    } else {
-      formDef = await fetchForm(container.href);
-    }
+    ({ pathname } = new URL(container.href));
+    formDef = await fetchForm(pathname);
   } else {
     container = block.querySelector('pre');
     const codeEl = container?.querySelector('code');
@@ -394,12 +383,20 @@ export default async function decorate(block) {
     }
   }
   if (formDef) {
-    const data = await fetchData(formDef);
-    await registerCustomFunctions();
-    const form = await initializeRuleEngineWorker({
-      ...formDef,
-      data,
-    }, createForm);
-    container.replaceWith(form);
+    if (isDocumentBasedForm(formDef)) {
+      const { data } = formDef;
+      const transform = new DocBasedFormToAF();
+      const afFormDef = transform.transform(formDef);
+      const form = await createForm(afFormDef, data);
+      form.dataset.action = pathname?.split('.json')[0];
+      form.dataset.src = 'sheet';
+      container.replaceWith(form);
+    } else {
+      afModule = await import('./rules/index.js');
+      if (afModule && afModule.initAdaptiveForm) {
+        const form = await afModule.initAdaptiveForm(formDef, createForm);
+        container.replaceWith(form);
+      }
+    }
   }
 }
