@@ -36,16 +36,31 @@ function generateUnique() {
   return new Date().valueOf() + Math.random();
 }
 
+function getFieldValue(fe, payload) {
+  if (fe.type === 'radio') {
+    if (fe.checked) return fe.value;
+  } else if (fe.type === 'checkbox') {
+    if (fe.checked) {
+      if (payload[fe.name]) {
+        return `${payload[fe.name]},${fe.value}`;
+      }
+      return fe.value;
+    }
+  } else if (fe.type !== 'file') {
+    return fe.value;
+  }
+  return null;
+}
+
 function constructPayload(form) {
   const payload = { __id__: generateUnique() };
   [...form.elements].forEach((fe) => {
-    if (fe.name) {
-      if (fe.type === 'radio') {
-        if (fe.checked) payload[fe.name] = fe.value;
-      } else if (fe.type === 'checkbox') {
-        if (fe.checked) payload[fe.name] = payload[fe.name] ? `${payload[fe.name]},${fe.value}` : fe.value;
-      } else if (fe.type !== 'file') {
-        payload[fe.name] = fe.value;
+    if (fe.name && !fe.matches('button') && !fe.disabled && fe.tagName !== 'FIELDSET') {
+      const value = getFieldValue(fe, payload);
+      if (fe.closest('.form-repeat-wrapper')) {
+        payload[fe.name] = payload[fe.name] ? `${payload[fe.name]},${fe.value}` : value;
+      } else {
+        payload[fe.name] = value;
       }
     }
   });

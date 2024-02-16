@@ -100,6 +100,8 @@ export default class DocBasedFormToAF {
         // eslint-disable-next-line no-unused-vars
         const source = Object.fromEntries(Object.entries(item).filter(([_, v]) => (v != null && v !== '')));
         let field = { ...source, ...this.#initField() };
+        field.id = field.Id || getId(field.Name);
+        field.value = field.Value || '';
         this.#transformFieldNames(field);
 
         if (this.#isProperty(field)) {
@@ -114,12 +116,6 @@ export default class DocBasedFormToAF {
         }
       }
     });
-
-    formDef.items = formDef.items.map((fd) => ({
-      ...fd,
-      id: fd.id || getId(fd.name),
-      value: fd.Value || '',
-    }));
 
     return formDef;
   }

@@ -373,7 +373,7 @@ export default async function decorate(block) {
   let pathname;
   if (container) {
     ({ pathname } = new URL(container.href));
-    formDef = await fetchForm(pathname);
+    formDef = await fetchForm(container.href);
   } else {
     container = block.querySelector('pre');
     const codeEl = container?.querySelector('code');
