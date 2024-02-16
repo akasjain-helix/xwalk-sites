@@ -21,8 +21,8 @@ async function handleEditorUpdate(event) {
   if(block.hasAttribute('data-aue-model') && block.getAttribute('data-aue-model') == 'embedform') {
     block.innerHTML = `<a href="${detail?.patch?.value}"> </a>`;
     block.dataset.blockStatus = '';
-    decorateBlock(newBlock);
-    await loadBlock(newBlock);
+    decorateBlock(block);
+    await loadBlock(block);
     // remove the old block and show the new one
     //block.remove();
     return;
