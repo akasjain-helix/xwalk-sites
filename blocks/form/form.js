@@ -368,7 +368,7 @@ function isDocumentBasedForm(formDef) {
 }
 
 export default async function decorate(block) {
-  let container = block.querySelector('a[href$=".json"]');
+  let container = block.querySelector('a[href]');
   let formDef;
   let pathname;
   if (container) {
