@@ -1,5 +1,5 @@
 # the origin to fetch content from
-origin: http://akasjain-aem.corp.adobe.com:4502
+origin: https://70c8-103-43-112-97.ngrok-free.app
 suffix: .html
 # the live urls of the content
 # this is used to make absolute links to the urls domain reliatve
