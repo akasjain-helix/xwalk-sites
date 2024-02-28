@@ -1,14 +1,14 @@
-mountpoints:
-  /:
-    url: https://baee-103-43-112-97.ngrok-free.app
-    type: "markup"
-    suffix: ""
-
 #mountpoints:
 #  /:
-#    url: https://4780-103-43-112-97.ngrok-free.app/bin/franklin.delivery/akasjain-helix/xwalk-sites/main
+#    url: https://baee-103-43-112-97.ngrok-free.app
 #    type: "markup"
-#    suffix: ".html"
+#    suffix: ""
+
+mountpoints:
+  /:
+    url: https://f5db-103-43-112-97.ngrok-free.app/bin/franklin.delivery/akasjain-helix/xwalk-sites/main
+    type: "markup"
+    suffix: ".html"
     
 #mountpoints:
 #  /:
