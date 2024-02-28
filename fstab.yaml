@@ -2,7 +2,7 @@ mountpoints:
   /:
     url: https://baee-103-43-112-97.ngrok-free.app
     type: "markup"
-    suffix: ".html"
+    suffix: ""
 
 #mountpoints:
 #  /:
