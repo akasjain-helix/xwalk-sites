@@ -8,7 +8,7 @@ mountpoints:
   /:
     url: https://f5db-103-43-112-97.ngrok-free.app/bin/franklin.delivery/akasjain-helix/xwalk-sites/main
     type: "markup"
-    suffix: ".html"
+    suffix: ".html?wcmmode=disabled"
     
 #mountpoints:
 #  /:
