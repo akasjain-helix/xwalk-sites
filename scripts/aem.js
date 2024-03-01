@@ -27,12 +27,12 @@ function sampleRUM(checkpoint, data = {}) {
     sampleRUM[fnname] = sampleRUM[fnname] || ((...args) => sampleRUM.defer.push({ fnname, args }));
   };
   sampleRUM.drain = sampleRUM.drain
-    || ((dfnname, fn) => {
-      sampleRUM[dfnname] = fn;
-      sampleRUM.defer
-        .filter(({ fnname }) => dfnname === fnname)
-        .forEach(({ fnname, args }) => sampleRUM[fnname](...args));
-    });
+                    || ((dfnname, fn) => {
+        sampleRUM[dfnname] = fn;
+        sampleRUM.defer
+            .filter(({ fnname }) => dfnname === fnname)
+            .forEach(({ fnname, args }) => sampleRUM[fnname](...args));
+      });
   sampleRUM.always = sampleRUM.always || [];
   sampleRUM.always.on = (chkpnt, fn) => {
     sampleRUM.always[chkpnt] = fn;
@@ -48,9 +48,9 @@ function sampleRUM(checkpoint, data = {}) {
       const usp = new URLSearchParams(window.location.search);
       const weight = usp.get('rum') === 'on' ? 1 : 100; // with parameter, weight is 1. Defaults to 100.
       const id = Array.from({ length: 75 }, (_, i) => String.fromCharCode(48 + i))
-        .filter((a) => /\d|[A-Z]/i.test(a))
-        .filter(() => Math.random() * 75 > 70)
-        .join('');
+          .filter((a) => /\d|[A-Z]/i.test(a))
+          .filter(() => Math.random() * 75 > 70)
+          .join('');
       const random = Math.random();
       const isSelected = random * weight < 1;
       const firstReadTime = Date.now();
@@ -89,15 +89,15 @@ function sampleRUM(checkpoint, data = {}) {
       const sendPing = (pdata = data) => {
         // eslint-disable-next-line object-curly-newline, max-len, no-use-before-define
         const body = JSON.stringify(
-          {
-            weight,
-            id,
-            referer: window.hlx.rum.sanitizeURL(),
-            checkpoint,
-            t: Date.now() - firstReadTime,
-            ...data,
-          },
-          knownProperties,
+            {
+              weight,
+              id,
+              referer: window.hlx.rum.sanitizeURL(),
+              checkpoint,
+              t: Date.now() - firstReadTime,
+              ...data,
+            },
+            knownProperties,
         );
         const url = `https://rum.hlx.page/.rum/${weight}`;
         // eslint-disable-next-line no-unused-expressions
@@ -174,12 +174,12 @@ function init() {
  */
 function toClassName(name) {
   return typeof name === 'string'
-    ? name
-      .toLowerCase()
-      .replace(/[^0-9a-z]/gi, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '')
-    : '';
+         ? name
+             .toLowerCase()
+             .replace(/[^0-9a-z]/gi, '-')
+             .replace(/-+/g, '-')
+             .replace(/^-|-$/g, '')
+         : '';
 }
 
 /**
@@ -288,8 +288,8 @@ async function loadScript(src, attrs) {
 function getMetadata(name, doc = document) {
   const attr = name && name.includes(':') ? 'property' : 'name';
   const meta = [...doc.head.querySelectorAll(`meta[${attr}="${name}"]`)]
-    .map((m) => m.content)
-    .join(', ');
+      .map((m) => m.content)
+      .join(', ');
   return meta || '';
 }
 
@@ -302,10 +302,10 @@ function getMetadata(name, doc = document) {
  * @returns {Element} The picture element
  */
 function createOptimizedPicture(
-  src,
-  alt = '',
-  eager = false,
-  breakpoints = [{ media: '(min-width: 600px)', width: '2000' }, { width: '750' }],
+    src,
+    alt = '',
+    eager = false,
+    breakpoints = [{ media: '(min-width: 600px)', width: '2000' }, { width: '750' }],
 ) {
   const url = new URL(src, window.location.href);
   const picture = document.createElement('picture');
@@ -371,19 +371,19 @@ function decorateButtons(element) {
           up.classList.add('button-container');
         }
         if (
-          up.childNodes.length === 1
-          && up.tagName === 'STRONG'
-          && twoup.childNodes.length === 1
-          && twoup.tagName === 'P'
+            up.childNodes.length === 1
+            && up.tagName === 'STRONG'
+            && twoup.childNodes.length === 1
+            && twoup.tagName === 'P'
         ) {
           a.className = 'button primary';
           twoup.classList.add('button-container');
         }
         if (
-          up.childNodes.length === 1
-          && up.tagName === 'EM'
-          && twoup.childNodes.length === 1
-          && twoup.tagName === 'P'
+            up.childNodes.length === 1
+            && up.tagName === 'EM'
+            && twoup.childNodes.length === 1
+            && twoup.tagName === 'P'
         ) {
           a.className = 'button secondary';
           twoup.classList.add('button-container');
@@ -401,8 +401,8 @@ function decorateButtons(element) {
  */
 function decorateIcon(span, prefix = '', alt = '') {
   const iconName = Array.from(span.classList)
-    .find((c) => c.startsWith('icon-'))
-    .substring(5);
+      .find((c) => c.startsWith('icon-'))
+      .substring(5);
   const img = document.createElement('img');
   img.dataset.iconName = iconName;
   img.src = `${window.hlx.codeBasePath}${prefix}/icons/${iconName}.svg`;
@@ -443,7 +443,7 @@ function decorateSections(main) {
     wrappers.forEach((wrapper) => section.append(wrapper));
     section.classList.add('section');
     section.dataset.sectionStatus = 'initialized';
-    //section.style.display = 'none';
+    section.style.display = 'none';
 
     // Process section metadata
     const sectionMeta = section.querySelector('div.section-metadata');
@@ -452,9 +452,9 @@ function decorateSections(main) {
       Object.keys(meta).forEach((key) => {
         if (key === 'style') {
           const styles = meta.style
-            .split(',')
-            .filter((style) => style)
-            .map((style) => toClassName(style.trim()));
+              .split(',')
+              .filter((style) => style)
+              .map((style) => toClassName(style.trim()));
           styles.forEach((style) => section.classList.add(style));
         } else {
           section.dataset[toCamelCase(key)] = meta[key];
@@ -476,27 +476,27 @@ async function fetchPlaceholders(prefix = 'default') {
   if (!window.placeholders[prefix]) {
     window.placeholders[prefix] = new Promise((resolve) => {
       fetch(`${prefix === 'default' ? '' : prefix}/placeholders.json`)
-        .then((resp) => {
-          if (resp.ok) {
-            return resp.json();
-          }
-          return {};
-        })
-        .then((json) => {
-          const placeholders = {};
-          json.data
-            .filter((placeholder) => placeholder.Key)
-            .forEach((placeholder) => {
-              placeholders[toCamelCase(placeholder.Key)] = placeholder.Text;
-            });
-          window.placeholders[prefix] = placeholders;
-          resolve(window.placeholders[prefix]);
-        })
-        .catch(() => {
-          // error loading placeholders
-          window.placeholders[prefix] = {};
-          resolve(window.placeholders[prefix]);
-        });
+          .then((resp) => {
+            if (resp.ok) {
+              return resp.json();
+            }
+            return {};
+          })
+          .then((json) => {
+            const placeholders = {};
+            json.data
+                .filter((placeholder) => placeholder.Key)
+                .forEach((placeholder) => {
+                  placeholders[toCamelCase(placeholder.Key)] = placeholder.Text;
+                });
+            window.placeholders[prefix] = placeholders;
+            resolve(window.placeholders[prefix]);
+          })
+          .catch(() => {
+            // error loading placeholders
+            window.placeholders[prefix] = {};
+            resolve(window.placeholders[prefix]);
+          });
     });
   }
   return window.placeholders[`${prefix}`];
@@ -513,7 +513,7 @@ function updateSectionsStatus(main) {
     const status = section.dataset.sectionStatus;
     if (status !== 'loaded') {
       const loadingBlock = section.querySelector(
-        '.block[data-block-status="initialized"], .block[data-block-status="loading"]',
+          '.block[data-block-status="initialized"], .block[data-block-status="loading"]',
       );
       if (loadingBlock) {
         section.dataset.sectionStatus = 'loading';
@@ -572,8 +572,8 @@ async function loadBlock(block) {
         (async () => {
           try {
             const mod = await import(
-              `${window.hlx.codeBasePath}/blocks/${blockName}/${blockName}.js`
-            );
+                `${window.hlx.codeBasePath}/blocks/${blockName}/${blockName}.js`
+                );
             if (mod.default) {
               await mod.default(block);
             }
