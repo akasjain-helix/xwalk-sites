@@ -29,23 +29,23 @@ export default class DocBasedFormToAF {
   };
 
   fieldMapping = new Map([
-    ['text', 'text-input'],
-    ['number', 'number-input'],
-    ['datetime-local', 'date-input'],
-    ['file', 'file-input'],
-    ['select', 'drop-down'],
-    ['radio-group', 'radio-group'],
-    ['checkbox-group', 'checkbox-group'],
-    ['plain-text', 'plain-text'],
-    ['checkbox', 'checkbox'],
-    ['textarea', 'multiline-input'],
-    ['fieldset', 'panel'],
-    ['button', 'button'],
-  ]);
+                           ['text', 'text-input'],
+                           ['number', 'number-input'],
+                           ['datetime-local', 'date-input'],
+                           ['file', 'file-input'],
+                           ['select', 'drop-down'],
+                           ['radio-group', 'radio-group'],
+                           ['checkbox-group', 'checkbox-group'],
+                           ['plain-text', 'plain-text'],
+                           ['checkbox', 'checkbox'],
+                           ['textarea', 'multiline-input'],
+                           ['fieldset', 'panel'],
+                           ['button', 'button'],
+                         ]);
 
   /**
-     * @param {string} formPath
-     */
+   * @param {string} formPath
+   */
   async getForm(formPath) {
     if (!formPath) {
       throw new Error('formPath is required');
@@ -77,11 +77,11 @@ export default class DocBasedFormToAF {
   }
 
   /**
-     * @param {{ total?: number;
-     * offset?: number; limit?: number; data: any; ":type"?: string; adaptiveform?: any; }} exData
-     *
-     * @return {{formDef: any, excelData: any}} response
-     */
+   * @param {{ total?: number;
+   * offset?: number; limit?: number; data: any; ":type"?: string; adaptiveform?: any; }} exData
+   *
+   * @return {{formDef: any, excelData: any}} response
+   */
   transform(exData, { name } = { name: 'Form' }) {
     this.errors = [];
     // if its adaptive form json just return it.
@@ -121,9 +121,9 @@ export default class DocBasedFormToAF {
   }
 
   /**
-     * @param {any} formDef Headless Form definition
-     * @param {any} field
-     */
+   * @param {any} formDef Headless Form definition
+   * @param {any} field
+   */
   #handleProperites(formDef, field) {
     formDef.properties[field.name] = field.default;
   }
@@ -137,10 +137,10 @@ export default class DocBasedFormToAF {
   }
 
   /**
-     * Transform flat field to Crispr Field
-     * @param {any} field
-     * @returns
-     */
+   * Transform flat field to Crispr Field
+   * @param {any} field
+   * @returns
+   */
   #handleField(field) {
     this.#transformFieldType(field);
     this.#transformFlatToHierarchy(field);
@@ -164,10 +164,10 @@ export default class DocBasedFormToAF {
   }
 
   /**
-     * Convert flat field to hierarchy based on dot notation.
-     * @param {any} item Flat field Definition
-     * @returns
-     */
+   * Convert flat field to hierarchy based on dot notation.
+   * @param {any} item Flat field Definition
+   * @returns
+   */
   #transformFlatToHierarchy(item) {
     Object.keys(item).forEach((key) => {
       if (key.includes('.')) {
@@ -187,9 +187,9 @@ export default class DocBasedFormToAF {
   }
 
   /**
-     * Transform CRISPR fieldType to HTML Input Type.
-     * @param {any} field FieldJson
-     */
+   * Transform CRISPR fieldType to HTML Input Type.
+   * @param {any} field FieldJson
+   */
   #transformFieldType(field) {
     if (this.fieldMapping.has(field?.fieldType)) {
       field.fieldType = this.fieldMapping.get(field?.fieldType);
@@ -197,9 +197,9 @@ export default class DocBasedFormToAF {
   }
 
   /**
-     * Convert Field names from Franklin Form to crispr def.
-     * @param {any} field Form Def received from excel
-     */
+   * Convert Field names from Franklin Form to crispr def.
+   * @param {any} field Form Def received from excel
+   */
   #transformFieldNames(field) {
     Object.keys(this.fieldPropertyMapping).forEach((key) => {
       if (field[key]) {
@@ -210,10 +210,10 @@ export default class DocBasedFormToAF {
   }
 
   /**
-     * handle multivalues field i.e. comma seprator to array.
-     * @param {{ [x: string]: any; }} item
-     * @param {string | number} key
-     */
+   * handle multivalues field i.e. comma seprator to array.
+   * @param {{ [x: string]: any; }} item
+   * @param {string | number} key
+   */
   #handleMultiValues(item, key) {
     let values;
     if (item && item[key] && typeof item[key] === 'string') {
@@ -223,9 +223,9 @@ export default class DocBasedFormToAF {
   }
 
   /**
-     * Handle special use cases of Franklin.
-     * @param {{ required: string | boolean; }} item
-     */
+   * Handle special use cases of Franklin.
+   * @param {{ required: string | boolean; }} item
+   */
   #handleFranklinSpecialCases(item) {
     // Franklin Mandatory uses x for true.
     item.required = (item.required === 'x' || item.required === 'true' || item.required === true);
@@ -247,9 +247,9 @@ export default class DocBasedFormToAF {
   }
 
   /**
-     * Handle Panel related transformation.
-     * @param {*} field
-     */
+   * Handle Panel related transformation.
+   * @param {*} field
+   */
   #handlePanel(field) {
     if (field?.fieldType === 'panel') {
       // Ignore name if type is not defined on panel.
@@ -260,8 +260,8 @@ export default class DocBasedFormToAF {
   }
 
   /**
-     * @param {any} field FieldJson
-     */
+   * @param {any} field FieldJson
+   */
   #isProperty(field) {
     return field && field.fieldType === PROPERTY;
   }

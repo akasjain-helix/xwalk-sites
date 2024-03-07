@@ -18,7 +18,7 @@
 * the terms of the Adobe license agreement accompanying it.
 *************************************************************************/
 
-import { propertyChange, ExecuteRule, Initialize, RemoveItem, FormLoad, FieldChanged, ValidationComplete, Change, Valid, Invalid, SubmitSuccess, CustomEvent, SubmitFailure, Submit, RemoveInstance, AddInstance, Reset, AddItem, Click } from './afb-events.js';
+import { propertyChange, ExecuteRule, Initialize, RemoveItem, FormLoad, FieldChanged, ValidationComplete, Change, Valid, Invalid, SubmitSuccess, CustomEvent, SubmitError, SubmitFailure, Submit, RemoveInstance, AddInstance, Reset, AddItem, Click } from './afb-events.js';
 import Formula from '../formula/index.js';
 import { format, parseDefaultDate, datetimeToNumber, parseDateSkeleton, formatDate, numberToDatetime } from './afb-formatters.min.js';
 
@@ -828,7 +828,11 @@ class BaseNode {
             index: this.index,
             parent: undefined,
             qualifiedName: this.qualifiedName,
-            repeatable: this.repeatable === true ? true : undefined,
+            ...(this.repeatable === true ? {
+                repeatable: true,
+                minOccur: this.parent.minItems,
+                maxOccur: this.parent.maxItems
+            } : {}),
             ':type': this[':type'],
             ...(forRestore ? {
                 _dependents: this._dependents.length ? this._dependents.map(x => x.node.id) : undefined,
@@ -1173,14 +1177,15 @@ class Scriptable extends BaseNode {
                 if (prop === Symbol.toStringTag) {
                     return 'Object';
                 }
-                prop = prop;
                 if (typeof prop === 'string' && prop.startsWith('$')) {
                     const retValue = target.self[prop];
                     if (retValue instanceof BaseNode) {
                         return retValue.getRuleNode();
-                    } else if (retValue instanceof Array) {
+                    }
+                    else if (retValue instanceof Array) {
                         return retValue.map(r => r instanceof BaseNode ? r.getRuleNode() : r);
-                    } else {
+                    }
+                    else {
                         return retValue;
                     }
                 }
@@ -2202,7 +2207,8 @@ const request = async (context, uri, httpVerb, payload, success, error, headers)
     else {
         context.form.logger.error('Error invoking a rest API');
         const eName = getCustomEventName(error);
-        if (error === 'submitFailure') {
+        if (error === 'submitError') {
+            context.form.dispatch(new SubmitError(result, true));
             context.form.dispatch(new SubmitFailure(result, true));
         }
         else {
@@ -2312,9 +2318,28 @@ class FunctionRuntimeImpl {
                 finalFunction = {
                     _func: (args, data, interpreter) => {
                         const globals = {
-                            form: interpreter.globals.form,
-                            invoke: (funcName, ...args) => {
-                                return FunctionRuntimeImpl.getInstance().customFunctions[funcName]._func.call(undefined, args, data, interpreter);
+                            form: interpreter.globals.$form,
+                            field: interpreter.globals.$field,
+                            event: interpreter.globals.$event,
+                            functions: {
+                                setProperty: (target, payload) => {
+                                    const eventName = 'custom:setProperty';
+                                    const args = [target, eventName, payload];
+                                    return FunctionRuntimeImpl.getInstance().getFunctions().dispatchEvent._func.call(undefined, args, data, interpreter);
+                                },
+                                reset: (target) => {
+                                    const eventName = 'reset';
+                                    target = target || 'reset';
+                                    const args = [target, eventName];
+                                    return FunctionRuntimeImpl.getInstance().getFunctions().dispatchEvent._func.call(undefined, args, data, interpreter);
+                                },
+                                validate: (target) => {
+                                    const args = [target];
+                                    return FunctionRuntimeImpl.getInstance().getFunctions().validate._func.call(undefined, args, data, interpreter);
+                                },
+                                exportData: () => {
+                                    return FunctionRuntimeImpl.getInstance().getFunctions().exportData._func.call(undefined, args, data, interpreter);
+                                }
                             }
                         };
                         return funcDef(...args, globals);
@@ -2419,10 +2444,12 @@ class FunctionRuntimeImpl {
                     const error = toString(args[1]);
                     const submit_as = args.length > 2 ? toString(args[2]) : 'multipart/form-data';
                     const submit_data = args.length > 3 ? valueOf(args[3]) : null;
+                    const validate_form = args.length > 4 ? valueOf(args[4]) : true;
                     interpreter.globals.form.dispatch(new Submit({
                         success,
                         error,
                         submit_as,
+                        validate_form: validate_form,
                         data: submit_data
                     }));
                     return {};
@@ -2749,10 +2776,11 @@ class Form extends Container {
         }
     }
     submit(action, context) {
-        if (this.validate().length === 0) {
+        const validate_form = action?.payload?.validate_form;
+        if (!validate_form || this.validate().length === 0) {
             const payload = action?.payload || {};
             const successEventName = payload?.success ? payload?.success : 'submitSuccess';
-            const failureEventName = payload?.error ? payload?.error : 'submitFailure';
+            const failureEventName = payload?.error ? payload?.error : 'submitError';
             submit(context, successEventName, failureEventName, payload?.submit_as, payload?.data);
         }
     }
@@ -3419,6 +3447,7 @@ class Field extends Scriptable {
     }
     set required(r) {
         this._setProperty('required', r);
+        this.validate();
     }
     get maximum() {
         if (this.type === 'number' || this.format === 'date' || this.type === 'integer') {
@@ -4220,9 +4249,13 @@ const createFormInstance = (formModel, callback, logLevel = 'error', fModel = un
 const defaultOptions = {
     logLevel: 'error'
 };
-const restoreFormInstance = (formModel, { logLevel } = defaultOptions) => {
+const restoreFormInstance = (formModel, data = null, { logLevel } = defaultOptions) => {
     try {
         const form = new Form({ ...formModel }, FormFieldFactory, new RuleEngine(), new EventQueue(new Logger(logLevel)), logLevel, 'restore');
+        if (data) {
+            form._bindToDataModel(new DataGroup('$form', data));
+            form.syncDataAndFormModel(form.getDataNode());
+        }
         form.getEventQueue().empty();
         return form;
     }

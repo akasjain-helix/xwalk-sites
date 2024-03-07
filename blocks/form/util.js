@@ -4,13 +4,13 @@ const allowedTags = `${headings}<a><b><p><i><em><strong><ul><li>`;
 
 export function stripTags(input, allowd = allowedTags) {
   const allowed = ((`${allowd || ''}`)
-    .toLowerCase()
-    .match(/<[a-z][a-z0-9]*>/g) || [])
-    .join(''); // making sure the allowed arg is a string containing only tags in lowercase (<a><b><c>)
+                       .toLowerCase()
+                       .match(/<[a-z][a-z0-9]*>/g) || [])
+      .join(''); // making sure the allowed arg is a string containing only tags in lowercase (<a><b><c>)
   const tags = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
   const comments = /<!--[\s\S]*?-->/gi;
   return input.replace(comments, '')
-    .replace(tags, ($0, $1) => (allowed.indexOf(`<${$1.toLowerCase()}>`) > -1 ? $0 : ''));
+      .replace(tags, ($0, $1) => (allowed.indexOf(`<${$1.toLowerCase()}>`) > -1 ? $0 : ''));
 }
 
 /**
@@ -20,12 +20,12 @@ export function stripTags(input, allowd = allowedTags) {
  */
 function toClassName(name) {
   return typeof name === 'string'
-    ? name
-      .toLowerCase()
-      .replace(/[^0-9a-z]/gi, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '')
-    : '';
+         ? name
+             .toLowerCase()
+             .replace(/[^0-9a-z]/gi, '-')
+             .replace(/-+/g, '-')
+             .replace(/^-|-$/g, '')
+         : '';
 }
 
 export const getId = (function getId() {
@@ -66,9 +66,9 @@ export function getHTMLRenderType(fd) {
 
 export function createFieldWrapper(fd, tagName = 'div', labelFn = createLabel) {
   const fieldWrapper = document.createElement(tagName);
-  const nameStyle = fd.name ? ` form-${toClassName(fd.name)}` : '';
+  const nameStyle = fd.name ? ` field-${toClassName(fd.name)}` : '';
   const renderType = getHTMLRenderType(fd);
-  const fieldId = `form-${renderType}-wrapper${nameStyle}`;
+  const fieldId = `${renderType}-wrapper${nameStyle}`;
   fieldWrapper.className = fieldId;
   if (fd.visible === false) {
     fieldWrapper.dataset.visible = fd.visible;
@@ -84,14 +84,17 @@ export function createFieldWrapper(fd, tagName = 'div', labelFn = createLabel) {
 export function createButton(fd) {
   const wrapper = createFieldWrapper(fd);
   if (fd.buttonType) {
-    wrapper.classList.add(`form-${fd?.buttonType}-wrapper`);
+    wrapper.classList.add(`${fd?.buttonType}-wrapper`);
   }
   const button = document.createElement('button');
-  button.textContent = fd?.label?.value || '';
+  button.textContent = fd?.label?.visible === false ? '' : fd?.label?.value;
   button.type = fd.buttonType || 'button';
   button.classList.add('button');
   button.id = fd.id;
   button.name = fd.name;
+  if (fd?.label?.visible === false) {
+    button.setAttribute('aria-label', fd?.label?.value || '');
+  }
   if (fd.enabled === false) {
     button.disabled = true;
     button.setAttribute('disabled', '');
@@ -197,9 +200,9 @@ export function checkValidation(fieldElement) {
   }
 
   const [invalidProperty] = Object.keys(validityKeyMsgMap)
-    .filter((state) => fieldElement.validity[state]);
+      .filter((state) => fieldElement.validity[state]);
 
   const message = wrapper.dataset[validityKeyMsgMap[invalidProperty]]
-  || fieldElement.validationMessage;
+                  || fieldElement.validationMessage;
   updateOrCreateInvalidMsg(fieldElement, message);
 }

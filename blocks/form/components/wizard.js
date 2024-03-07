@@ -27,7 +27,7 @@ export class WizardLayout {
     const direction = forward ? 'nextElementSibling' : 'previousElementSibling';
 
     for (let sibling = current[direction]; sibling; sibling = sibling[direction]) {
-      if (sibling.dataset.hidden !== 'true') {
+      if (sibling.dataset.visible !== 'false' && sibling.tagName === 'FIELDSET') {
         return sibling;
       }
     }
@@ -53,6 +53,7 @@ export class WizardLayout {
 
   navigate(panel, forward = true) {
     const current = panel.querySelector('.current-wizard-step');
+    const currentMenuItem = panel.querySelector('.wizard-menu-active-item');
 
     let valid = true;
     if (forward) {
@@ -63,6 +64,10 @@ export class WizardLayout {
     if (navigateTo && current !== navigateTo) {
       current.classList.remove('current-wizard-step');
       navigateTo.classList.add('current-wizard-step');
+      // add/remove active class from menu item
+      const navigateToMenuItem = panel.querySelector(`li[data-index="${navigateTo.dataset.index}"]`);
+      currentMenuItem.classList.remove('wizard-menu-active-item');
+      navigateToMenuItem.classList.add('wizard-menu-active-item');
       const event = new CustomEvent('wizard:navigate', {
         detail: {
           prevStep: { id: current.id, index: +current.dataset.index },
@@ -74,6 +79,47 @@ export class WizardLayout {
     }
   }
 
+  static handleMutation(panel, mutationsList) {
+    mutationsList.forEach((mutation) => {
+      // Check if the mutation is a change in attributes(data-visible)
+      if (mutation.type === 'attributes' && mutation.attributeName === 'data-visible') {
+        const element = mutation.target;
+        const menuItem = panel.querySelector(`li[data-index="${element.dataset.index}"]`);
+        menuItem.dataset.visible = element.dataset.visible;
+      }
+    });
+  }
+
+  static attachMutationObserver(panel) {
+    const children = panel.querySelectorAll('.panel-wrapper');
+    // Options for the observer (attributes to observe for)
+    const config = { attributes: true, subtree: false };
+    // Create an observer instance linked to the callback function
+    const observer = new window.MutationObserver((mutationsList) => {
+      WizardLayout.handleMutation(panel, mutationsList);
+    });
+    // Start observing each target node for configured mutations
+    children.forEach((targetNode) => {
+      observer.observe(targetNode, config);
+    });
+  }
+
+  static createMenu(children) {
+    const ul = document.createElement('ul');
+    ul.className = 'wizard-menu-items';
+    children.forEach((child, index) => {
+      const li = document.createElement('li');
+      li.innerHTML = child.querySelector('legend')?.innerHTML || '';
+      li.className = 'wizard-menu-item';
+      li.dataset.index = index;
+      if (child.hasAttribute('data-visible')) {
+        li.dataset.visible = child.dataset.visible;
+      }
+      ul.append(li);
+    });
+    return ul;
+  }
+
   addButton(wrapper, panel, buttonDef, forward = true) {
     const button = createButton(buttonDef);
     button.classList.add(buttonDef.id);
@@ -82,21 +128,31 @@ export class WizardLayout {
   }
 
   applyLayout(panel) {
+    const children = panel.querySelectorAll('.panel-wrapper');
+    if (children.length) {
+      // create wizard menu
+      const wizardMenu = WizardLayout.createMenu(Array.from(children));
+      wizardMenu.querySelector('li').classList.add('wizard-menu-active-item');
+      // Insert the menu before the first child of the wizard
+      panel.insertBefore(wizardMenu, children[0]);
+      WizardLayout.attachMutationObserver(panel);
+    }
+
     const wrapper = document.createElement('div');
-    wrapper.className = 'form-wizard-button-wrapper';
-    if (this.includePrevBtn) {
+    wrapper.className = 'wizard-button-wrapper';
+    if (this.includePrevBtn && children.length) {
       this.addButton(wrapper, panel, {
-        label: { value: 'Back' }, fieldType: 'button', name: 'back', id: 'form-wizard-button-prev',
+        label: { value: 'Back' }, fieldType: 'button', name: 'back', id: 'wizard-button-prev',
       }, false);
     }
 
-    if (this.includeNextBtn) {
+    if (this.includeNextBtn && children.length) {
       this.addButton(wrapper, panel, {
-        label: { value: 'NEXT' }, fieldType: 'button', name: 'next', id: 'form-wizard-button-next',
+        label: { value: 'NEXT' }, fieldType: 'button', name: 'next', id: 'wizard-button-next',
       });
     }
 
-    const submitBtn = panel.querySelector('.form-submit-wrapper');
+    const submitBtn = panel.querySelector('.submit-wrapper');
     if (submitBtn) {
       wrapper.append(submitBtn);
     }

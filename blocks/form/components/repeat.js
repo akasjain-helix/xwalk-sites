@@ -1,12 +1,14 @@
 import { getId } from '../util.js';
 
 function update(fieldset, index, labelTemplate) {
-  const legend = fieldset.querySelector(':scope>.field-label').firstChild;
-  const text = labelTemplate.replace('#', index + 1);
+  const legend = fieldset.querySelector(':scope>.field-label')?.firstChild;
+  const text = labelTemplate?.replace('#', index + 1);
   if (legend) {
     legend.textContent = text;
   }
-  fieldset.id = getId(fieldset.name);
+  if (typeof fieldset.id === 'undefined') {
+    fieldset.id = getId(fieldset.name);
+  }
   fieldset.setAttribute('data-index', index);
   if (index > 0) {
     fieldset.querySelectorAll('.field-wrapper').forEach((f) => {
@@ -76,18 +78,31 @@ const add = (wrapper, form) => (e) => {
   form.dispatchEvent(event);
 };
 
+function getInstances(el) {
+  let nextSibling = el.nextElementSibling;
+  const siblings = [el];
+  while (nextSibling && nextSibling.matches('[data-repeatable="true"]:not([data-repeatable="0"])')) {
+    siblings.push(nextSibling);
+    nextSibling = siblings.nextSiblingElement;
+  }
+  return siblings;
+}
+
 export default function transferRepeatableDOM(form) {
-  form.querySelectorAll('[data-repeatable="true"]').forEach((el) => {
+  form.querySelectorAll('[data-repeatable="true"][data-index="0"]').forEach((el) => {
+    const instances = getInstances(el);
     const div = document.createElement('div');
     div.setAttribute('data-min', el.dataset.min);
     div.setAttribute('data-max', el.dataset.max);
     el.insertAdjacentElement('beforebegin', div);
-    div.append(el);
+    div.append(...instances);
     const addLabel = 'Add';
     const addButton = createButton(addLabel, 'add');
     addButton.addEventListener('click', add(div, form));
-    div['#repeat-template'] = el.cloneNode(true);
-    div['#repeat-template-label'] = el.querySelector(':scope>.field-label').textContent;
+    const cloneNode = el.cloneNode(true);
+    cloneNode.removeAttribute('id');
+    div['#repeat-template'] = cloneNode;
+    div['#repeat-template-label'] = el.querySelector(':scope>.field-label')?.textContent;
     if (+el.min === 0) {
       el.remove();
     } else {
@@ -95,6 +110,6 @@ export default function transferRepeatableDOM(form) {
       el.setAttribute('data-index', 0);
     }
     div.append(addButton);
-    div.className = 'form-repeat-wrapper';
+    div.className = 'repeat-wrapper';
   });
 }
