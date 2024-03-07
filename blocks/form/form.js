@@ -215,7 +215,6 @@ const fieldRenderers = {
 
 async function fetchForm(pathname) {
   // get the main form
-/*
   if(pathname.endsWith('.json')) {
     const resp = await fetch(pathname);
     return await resp.json();
@@ -224,9 +223,8 @@ async function fetchForm(pathname) {
     const resp = await fetch(pathname);
     return await resp.json();
   }
-*/
 
-  const resp = await fetch(pathname);
+/*  const resp = await fetch(pathname);
   let data;
   if(pathname.endsWith('.json')) {
     data = await resp.json();
@@ -236,17 +234,12 @@ async function fetchForm(pathname) {
       let doc = new DOMParser().parseFromString(html, "text/html");
       //const content = doc?.textContent;
       if (doc) {
-        return JSON.parse(cleanUp(doc));
+        return cleanUp(doc.body.getInnerHTML());
       }
-
-      // You can now even select part of that html as you would in the regular DOM
-      // Example:
-      // var docArticle = doc.querySelector('article').innerHTML;
-
       return doc;
     });
   }
-  return data;
+  return data;*/
 }
 
 function colSpanDecorator(field, element) {
