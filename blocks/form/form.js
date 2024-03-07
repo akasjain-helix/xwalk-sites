@@ -201,16 +201,17 @@ async function fetchForm(pathname) {
   } else if (pathname.endsWith('.html')) {
     data = await resp.text().then(function(html) {
       // Initialize the DOM parser
-      var parser = new DOMParser();
+      let doc = new DOMParser().parseFromString(html, "text/html");
+      return doc.querySelector('body').innerHTML;
 
       // Parse the text
-      var doc = parser.parseFromString(html, "text/html");
+      //var doc = parser.parseFromString(html, "text/html");
 
       // You can now even select part of that html as you would in the regular DOM
       // Example:
       // var docArticle = doc.querySelector('article').innerHTML;
 
-      return doc;
+      //return data;
     });
   }
   return data;
