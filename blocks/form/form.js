@@ -215,16 +215,16 @@ const fieldRenderers = {
 
 async function fetchForm(pathname) {
   // get the main form
-  if(pathname.endsWith('.json')) {
+  /*if(pathname.endsWith('.json')) {
     const resp = await fetch(pathname);
     return await resp.json();
   } else if (pathname.endsWith('.html')) {
     let containerPath = pathname.substring(0, pathname.length - 5) + "/jcr:content/guideContainer.model.json";
-    const resp = await fetch(pathname);
+    const resp = await fetch(containerPath);
     return await resp.json();
-  }
+  }*/
 
-/*  const resp = await fetch(pathname);
+  const resp = await fetch(pathname);
   let data;
   if(pathname.endsWith('.json')) {
     data = await resp.json();
@@ -239,7 +239,7 @@ async function fetchForm(pathname) {
       return doc;
     });
   }
-  return data;*/
+  return data;
 }
 
 function colSpanDecorator(field, element) {
@@ -428,7 +428,7 @@ export default async function decorate(block) {
   let formDef;
   let pathname;
   if (container) {
-    ({ pathname } = new URL(container.href));
+    ({pathname} = new URL(container.href));
     formDef = await fetchForm(container.href);
   } else {
     container = block.querySelector('pre');
@@ -438,7 +438,7 @@ export default async function decorate(block) {
       formDef = JSON.parse(cleanUp(content));
     }
   }
-  let { rules, source } = { rules: true, source: 'aem' };
+  let {rules, source} = {rules: true, source: 'aem'};
   let form;
   if (formDef) {
     if (isDocumentBasedForm(formDef)) {
