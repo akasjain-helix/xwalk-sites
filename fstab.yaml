@@ -1,15 +1,6 @@
-#mountpoints:
-#  /:
-#    url: https://baee-103-43-112-97.ngrok-free.app
-#    type: "markup"
-#    suffix: ""
-
 mountpoints:
   /:
     url:  https://0ac6-103-43-114-129.ngrok-free.app/bin/franklin.delivery/akasjain-helix/xwalk-sites/main
     type: "markup"
     suffix: ".html"
     
-#mountpoints:
-#  /:
-#    url: https://drive.google.com/drive/folders/1W6ltJcW1k3n6sPSNqEL0otHV8k3zI_T5
