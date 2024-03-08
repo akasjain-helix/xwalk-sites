@@ -308,7 +308,7 @@ main .form .button-wrapper button[disabled]:hover {
 }
 
 main .form form .field-wrapper {
-    grid-column: span 12;
+    grid-column: span 6;
 }
 
 /** Wizard Styling */
