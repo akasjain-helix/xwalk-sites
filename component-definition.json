@@ -72,7 +72,7 @@
               "page": {
                 "resourceType": "core/franklin/components/embedform/v1/embedform",
                 "template": {
-                  "rootPath": "/content/forms/af/..."
+                  "formPath": ""
                 }
               }
             }
