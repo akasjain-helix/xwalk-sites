@@ -208,9 +208,9 @@
       {
         "component": "text-input",
         "valueType": "string",
-        "name": "rootPath",
+        "name": "formPath",
         "value": "",
-        "label": "Root Path"
+        "label": "Form Path"
       }
     ]
   }
