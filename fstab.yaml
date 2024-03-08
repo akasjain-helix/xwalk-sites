@@ -6,7 +6,7 @@
 
 mountpoints:
   /:
-    url:  https://7535-103-234-157-66.ngrok-free.app/bin/franklin.delivery/akasjain-helix/xwalk-sites/main
+    url:  https://0ac6-103-43-114-129.ngrok-free.app/bin/franklin.delivery/akasjain-helix/xwalk-sites/main
     type: "markup"
     suffix: ".html"
     
