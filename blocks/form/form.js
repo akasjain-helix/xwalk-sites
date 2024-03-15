@@ -237,7 +237,7 @@ async function fetchForm(pathname) {
       let doc = new DOMParser().parseFromString(html, "text/html");
       //const content = doc?.textContent;
       if (doc) {
-        return cleanUp(doc.body.getInnerHTML());
+        return cleanUp(doc.body.querySelector('.cmp-adaptiveform-container code').innerHTML);
       }
       return doc;
     });
