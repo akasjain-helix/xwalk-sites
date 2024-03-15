@@ -203,10 +203,10 @@
     ]
   },
   {
-    "id": "embedform",
+    "id": "form",
     "fields": [
       {
-        "component": "text-input",
+        "component": "text",
         "valueType": "string",
         "name": "formPath",
         "value": "",
