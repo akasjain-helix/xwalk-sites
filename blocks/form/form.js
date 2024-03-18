@@ -270,6 +270,17 @@ async function fetchForm(pathname) {
       }
       return doc;
     });
+  } else {  // published page to EDS
+    const resp = await fetch(pathname);
+    data = await resp.text().then(function(html) {
+      // Initialize the DOM parser
+      let doc = new DOMParser().parseFromString(html, "text/html");
+      //const content = doc?.textContent;
+      if (doc) {
+        return JSON.parse(cleanUp(doc.querySelector('pre code').innerHTML));
+      }
+      return doc;
+    });
   }
   return data;
 }
