@@ -4,7 +4,7 @@ export default async function initializeRuleEngineWorker(formDef, renderHTMLForm
     const form = ruleEngine.createFormInstance(formDef);
     return renderHTMLForm(form.getState(true));
   }
-  const myWorker = new Worker('/content/franklin-examples.resource/blocks/embedform/rules/RuleEngineWorker.js', { type: 'module' });
+  const myWorker = new Worker('./rules/RuleEngineWorker.js', { type: 'module' });
 
   myWorker.postMessage({
     name: 'init',
