@@ -244,40 +244,23 @@ const fieldRenderers = {
 };
 
 async function fetchForm(pathname) {
-  // get the main form
-  /*if(pathname.endsWith('.json')) {
-    const resp = await fetch(pathname);
-    return await resp.json();
-  } else if (pathname.endsWith('.html')) {
-    let containerPath = pathname.substring(0, pathname.length - 5) + "/jcr:content/guideContainer.model.json";
-    const resp = await fetch(containerPath);
-    return await resp.json();
-  }*/
 
   let data;
   if(pathname.endsWith('.json')) {
     const resp = await fetch(pathname);
     data = await resp.json();
-  } else if (pathname.endsWith('.html')) {
-    let path = pathname.replace(/\.html$/, '.md.html');
+  } else  {
+    let path = pathname;
+    if (pathname.endsWith('.html')) { // this will be a AF2 link in author. Can be removed later when .md.html can be handled in servlet
+      path = pathname.replace(/\.html$/, '.md.html');
+    }
     const resp = await fetch(path);
     data = await resp.text().then(function(html) {
       // Initialize the DOM parser
       let doc = new DOMParser().parseFromString(html, "text/html");
       //const content = doc?.textContent;
       if (doc) {
-        return JSON.parse(cleanUp(doc.body.querySelector('.cmp-adaptiveform-container code').innerHTML));
-      }
-      return doc;
-    });
-  } else {  // published page to EDS
-    const resp = await fetch(pathname);
-    data = await resp.text().then(function(html) {
-      // Initialize the DOM parser
-      let doc = new DOMParser().parseFromString(html, "text/html");
-      //const content = doc?.textContent;
-      if (doc) {
-        return JSON.parse(cleanUp(doc.querySelector('pre code').innerHTML));
+        return JSON.parse(cleanUp(doc.body.querySelector('.form pre code').innerHTML));
       }
       return doc;
     });
