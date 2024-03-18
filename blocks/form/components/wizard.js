@@ -91,7 +91,7 @@ export class WizardLayout {
   }
 
   static attachMutationObserver(panel) {
-    const children = panel.querySelectorAll('.panel-wrapper');
+    const children = panel.querySelectorAll(':scope > .panel-wrapper');
     // Options for the observer (attributes to observe for)
     const config = { attributes: true, subtree: false };
     // Create an observer instance linked to the callback function
@@ -128,7 +128,7 @@ export class WizardLayout {
   }
 
   applyLayout(panel) {
-    const children = panel.querySelectorAll('.panel-wrapper');
+    const children = panel.querySelectorAll(':scope > .panel-wrapper');
     if (children.length) {
       // create wizard menu
       const wizardMenu = WizardLayout.createMenu(Array.from(children));

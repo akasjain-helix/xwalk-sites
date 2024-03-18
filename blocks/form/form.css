@@ -48,7 +48,8 @@
     --form-upload-background-color: var(--background-color-primary);
     --form-submit-width: 100%;
     --form-width: 95%;
-    --form-wizard-background-color: #f2f2f2;
+    --form-wizard-border: 0;
+    --form-wizard-background-color: var(--background-color-primary);
     --form-wizard-border-color: #757575;
     --form-wizard-number-color: var(--button-primary-color);
     --form-wizard-padding: 30px;
@@ -129,8 +130,8 @@ main .form select {
 }
 
 main .form select {
-    padding-top: 0;
-    padding-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 main .form input[type='file'] {
@@ -185,6 +186,7 @@ main .form form .repeat-wrapper,
 main .form form .field-wrapper {
     margin: var(--form-field-gap);
     color: var(--form-label-color);
+    grid-column: span 12;
 }
 
 main .form form p {
@@ -267,21 +269,21 @@ main .form form .item-remove {
 }
 
 main .form .file-description .file-description-name {
-    cursor: pointer;
-    text-decoration: underline;
+  cursor: pointer;
+  text-decoration: underline;
 }
 
 main .form form .item-remove span {
     display: block;
     width: 20px;
     height: 20px;
-    background: url('./icons/delete.svg') no-repeat;
+    background: url('/icons/delete.svg') no-repeat;
 }
 
 main .file-wrapper .file-description button {
     --form-button-padding: 15px;
 
-    background: url('./icons/delete.svg') no-repeat;
+    background: url('/icons/delete.svg') no-repeat;
     width: unset;
     border: unset;
     text-align: center;
@@ -307,19 +309,15 @@ main .form .button-wrapper button[disabled]:hover {
     background-color: transparent;
 }
 
-main .form form .field-wrapper {
-    grid-column: span 6;
-}
-
 /** Wizard Styling */
 main .form form .wizard  {
-    display: grid;
-    counter-reset: wizard-step-counter;
-    grid-template-columns: minmax(0, 1fr);
-    border: 2px solid var(--form-wizard-border-color);
-    background-color: var( --form-wizard-background-color);
-    gap: unset;
-    padding: 20px var(--form-wizard-padding);
+  display: grid;
+  counter-reset: wizard-step-counter;
+  grid-template-columns: minmax(0, 1fr);
+  border: var(--form-wizard-border) solid var(--form-wizard-border-color);
+  background-color: var( --form-wizard-background-color);
+  gap: unset;
+  padding: 20px var(--form-wizard-padding);
 }
 
 main .form form .wizard > legend{
@@ -328,7 +326,7 @@ main .form form .wizard > legend{
 }
 
 main .form form .wizard > .field-description{
-    width: 100%;
+  width: 100%;
 }
 
 main .form form .wizard > fieldset > legend{
@@ -367,27 +365,27 @@ main .form form .wizard .wizard-button-wrapper .field-wrapper{
 }
 
 main .form form .wizard .wizard-menu-item {
-    counter-increment: wizard-step-counter;
+  counter-increment: wizard-step-counter;
 }
 
 main .form form .wizard .wizard-menu-item::before {
-    content: counter(wizard-step-counter);
-    border: 2px solid var(--form-wizard-number-color);
-    color: var(--form-wizard-number-color);
-    border-radius: 50%;
-    width: 35px;
-    height: 35px;
-    margin-right: 10px;
-    text-align: center;
-    line-height: 2;
-    display: inline-block;
+  content: counter(wizard-step-counter);
+  border: 2px solid var(--form-wizard-number-color);
+  color: var(--form-wizard-number-color);
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  margin-right: 10px;
+  text-align: center;
+  line-height: 2;
+  display: inline-block;
 }
 
 main .form form .wizard .wizard-menu-active-item::before{
-    border: 2px solid var(--form-wizard-number-color);
-    background: var(--form-wizard-number-color);
-    color: var(--background-color-primary);
-    font-weight: 600;
+  border: 2px solid var(--form-wizard-number-color);
+  background: var(--form-wizard-number-color);
+  color: var(--background-color-primary);
+  font-weight: 600;
 }
 
 @media (width >= 600px) {
@@ -398,28 +396,28 @@ main .form form .wizard .wizard-menu-active-item::before{
 
 /* wizard title on left */
 main .form form .wizard.left{
-    display: flex;
+  display: flex;
 }
 
 main .form form .wizard.left .wizard-menu-items{
-    flex-direction: column;
-    width: 300px;
+  flex-direction: column;
+  width: 300px;
 }
 
 main form .panel-wrapper {
-    display: flex;
-    padding: 0;
-    flex-direction: column;
+  display: flex;
+  padding: 0;
+  flex-direction: column;
 }
 
 main .form form .panel-wrapper{
-    display: grid;
-    grid-template-columns: repeat(var(--form-columns), minmax(0, 1fr));
-    gap: var(--form-field-vert-gap) var(--form-field-horz-gap);
+  display: grid;
+  grid-template-columns: repeat(var(--form-columns), minmax(0, 1fr));
+  gap: var(--form-field-vert-gap) var(--form-field-horz-gap);
 }
 
 main .form form .wizard.left .panel-wrapper{
-    flex: 1;
+  flex: 1;
 }
 
 @media (width >= 1200px) {
@@ -441,6 +439,8 @@ main .form .form-message.success-message {
     background-color: #d1e7dd;
     border-color: #badbcc;
     flex: 100%;
+    grid-column: span 12;
+    padding: 10px;
 }
 
 main .form .form-message.error-message {
@@ -448,22 +448,24 @@ main .form .form-message.error-message {
     background-color: #f8d7da;
     border-color: #f5c2c7;
     flex: 100%;
+    grid-column: span 12;
+    padding: 10px;
 }
 
 main .form .file-wrapper .file-drag-area {
-    border: 1px dashed var(--border-color);
-    border-radius: 5px;
-    padding: 10px 5px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    justify-content: center;
-    align-items: center;
+  border: 1px dashed var(--border-color);
+  border-radius: 5px;
+  padding: 10px 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
 }
 
 /* grid css */
 main .form form .field-wrapper .field-description{
-    grid-column: span 12;
+  grid-column: span 12;
 }
 
 main .form form .field-wrapper.col-12 {
@@ -475,7 +477,7 @@ main .form form .field-wrapper.col-11 {
 }
 
 main .form form .field-wrapper.col-10 {
-    grid-column: span 10;
+  grid-column: span 10;
 }
 
 main .form form .field-wrapper.col-9 {
@@ -491,23 +493,23 @@ main .form form .field-wrapper.col-7 {
 }
 
 main .form form .field-wrapper.col-6 {
-    grid-column: span 6;
+      grid-column: span 6;
 }
 
 main .form form .field-wrapper.col-5 {
-    grid-column: span 5;
+      grid-column: span 5;
 }
 
 main .form form .field-wrapper.col-4 {
-    grid-column: span 4;
+      grid-column: span 4;
 }
 
 main .form form .field-wrapper.col-3 {
-    grid-column: span 3;
+      grid-column: span 3;
 }
 
 main .form form .field-wrapper.col-2 {
-    grid-column: span 2;
+      grid-column: span 2;
 }
 
 main .form form .field-wrapper.col-1 {
@@ -515,6 +517,6 @@ main .form form .field-wrapper.col-1 {
 }
 
 main .form .form-image-wrapper  img{
-    max-width: 100%;
-    height: auto;
+  max-width: 100%;
+  height: auto;
 }

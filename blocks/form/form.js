@@ -224,20 +224,17 @@ async function fetchForm(pathname) {
     return await resp.json();
   }*/
 
+  const resp = await fetch(pathname);
   let data;
   if(pathname.endsWith('.json')) {
-    const resp = await fetch(pathname);
     data = await resp.json();
   } else if (pathname.endsWith('.html')) {
-
-    let path = pathname.replace(/\.html$/, '.md.html');
-    const resp = await fetch(path);
     data = await resp.text().then(function(html) {
       // Initialize the DOM parser
       let doc = new DOMParser().parseFromString(html, "text/html");
       //const content = doc?.textContent;
       if (doc) {
-        return JSON.parse(cleanUp(doc.body.querySelector('.cmp-adaptiveform-container code').innerHTML));
+        return cleanUp(doc.body.querySelector('.cmp-adaptiveform-container code').innerHTML);
       }
       return doc;
     });

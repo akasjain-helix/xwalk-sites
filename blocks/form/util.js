@@ -4,13 +4,13 @@ const allowedTags = `${headings}<a><b><p><i><em><strong><ul><li>`;
 
 export function stripTags(input, allowd = allowedTags) {
   const allowed = ((`${allowd || ''}`)
-                       .toLowerCase()
-                       .match(/<[a-z][a-z0-9]*>/g) || [])
-      .join(''); // making sure the allowed arg is a string containing only tags in lowercase (<a><b><c>)
+    .toLowerCase()
+    .match(/<[a-z][a-z0-9]*>/g) || [])
+    .join(''); // making sure the allowed arg is a string containing only tags in lowercase (<a><b><c>)
   const tags = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
   const comments = /<!--[\s\S]*?-->/gi;
   return input.replace(comments, '')
-      .replace(tags, ($0, $1) => (allowed.indexOf(`<${$1.toLowerCase()}>`) > -1 ? $0 : ''));
+    .replace(tags, ($0, $1) => (allowed.indexOf(`<${$1.toLowerCase()}>`) > -1 ? $0 : ''));
 }
 
 /**
@@ -20,17 +20,23 @@ export function stripTags(input, allowd = allowedTags) {
  */
 function toClassName(name) {
   return typeof name === 'string'
-         ? name
-             .toLowerCase()
-             .replace(/[^0-9a-z]/gi, '-')
-             .replace(/-+/g, '-')
-             .replace(/^-|-$/g, '')
-         : '';
+    ? name
+      .toLowerCase()
+      .replace(/[^0-9a-z]/gi, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+    : '';
 }
 
+const clear = Symbol('clear');
+
 export const getId = (function getId() {
-  const ids = {};
+  let ids = {};
   return (name) => {
+    if (name === clear) {
+      ids = {};
+      return '';
+    }
     const slug = toClassName(name);
     ids[slug] = ids[slug] || 0;
     const idSuffix = ids[slug] ? `-${ids[slug]}` : '';
@@ -38,6 +44,14 @@ export const getId = (function getId() {
     return `${slug}${idSuffix}`;
   };
 }());
+
+/**
+ * Resets the ids for the getId function
+ * @returns {void}
+ */
+export function resetIds() {
+  getId(clear);
+}
 
 export function createLabel(fd, tagName = 'label') {
   if (fd.label && fd.label.value) {
@@ -200,9 +214,9 @@ export function checkValidation(fieldElement) {
   }
 
   const [invalidProperty] = Object.keys(validityKeyMsgMap)
-      .filter((state) => fieldElement.validity[state]);
+    .filter((state) => fieldElement.validity[state]);
 
   const message = wrapper.dataset[validityKeyMsgMap[invalidProperty]]
-                  || fieldElement.validationMessage;
+  || fieldElement.validationMessage;
   updateOrCreateInvalidMsg(fieldElement, message);
 }
