@@ -487,7 +487,7 @@ export default async function decorate(block) {
       docRuleEngine.default(formDef, form);
       rules = false;
     } else {
-      afModule = await import('./rules/index.js');
+      afModule = await import('/content/franklin-examples/review.resource/blocks/form/rules/index.js');
       if (afModule && afModule.initAdaptiveForm) {
         form = await afModule.initAdaptiveForm(formDef, createForm);
       }
