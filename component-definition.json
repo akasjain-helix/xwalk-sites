@@ -137,8 +137,8 @@
               "page": {
                 "resourceType": "core/franklin/components/block/v1/block",
                 "template": {
-                  "name": "Form",
-                  "model": "form"
+                  "name": "Form Embed",
+                  "model": "formembed"
                 }
               }
             }
