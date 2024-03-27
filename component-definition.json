@@ -131,7 +131,7 @@
         },
         {
           "title": "Adaptive Form - Embed",
-          "id": "form",
+          "id": "formembed",
           "plugins": {
             "xwalk": {
               "page": {
