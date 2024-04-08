@@ -246,23 +246,24 @@ const fieldRenderers = {
 async function fetchForm(pathname) {
 
   let data;
-  if(pathname.endsWith('.json')) {
-    const resp = await fetch(pathname);
+  let resp = await fetch(pathname);
+
+  if(resp?.headers?.get('Content-Type')?.includes('application/json')) {
     data = await resp.json();
-  } else  {
-    let path = pathname;
-    if (pathname.endsWith('.html')) { // this will be a AF2 link in author. Can be removed later when .md.html can be handled in servlet
-      path = pathname.replace(/\.html$/, '.md.html');
-    }
-    const resp = await fetch(path);
-    data = await resp.text().then(function(html) {
-      // Initialize the DOM parser
-      let doc = new DOMParser().parseFromString(html, "text/html");
-      //const content = doc?.textContent;
-      if (doc) {
-        return JSON.parse(cleanUp(doc.body.querySelector('.form pre code').innerHTML));
+  } else if (resp?.headers?.get('Content-Type')?.includes('text/html')) {
+    let path = pathname.replace('.html', '.md.html');
+    resp = await fetch(path);
+    data = await resp.text().then((html) => {
+      try {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        if (doc) {
+          return JSON.parse(cleanUp(doc.body.querySelector('.form pre code').innerHTML));
+        }
+        return doc;
+      } catch (e) {
+        console.error('Unable to fetch form definition for path', pathname);
+        return null;
       }
-      return doc;
     });
   }
   return data;
