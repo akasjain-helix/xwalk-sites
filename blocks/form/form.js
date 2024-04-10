@@ -243,6 +243,17 @@ const fieldRenderers = {
   heading: createHeading,
 };
 
+function extractFormDefinition(block) {
+  let formDef;
+  const container = block.querySelector('pre');
+  const codeEl = container?.querySelector('code');
+  const content = codeEl?.textContent;
+  if (content) {
+    formDef = JSON.parse(cleanUp(content));
+  }
+  return formDef;
+}
+
 async function fetchForm(pathname) {
 
   let data;
@@ -257,7 +268,7 @@ async function fetchForm(pathname) {
       try {
         const doc = new DOMParser().parseFromString(html, 'text/html');
         if (doc) {
-          return JSON.parse(cleanUp(doc.body.querySelector('.form pre code').innerHTML));
+          return extractFormDefinition(doc.body);
         }
         return doc;
       } catch (e) {
@@ -461,12 +472,7 @@ export default async function decorate(block) {
     ({ pathname } = new URL(container.href));
     formDef = await fetchForm(container.href);
   } else {
-    container = block.querySelector('pre');
-    const codeEl = container?.querySelector('code');
-    const content = codeEl?.textContent;
-    if (content) {
-      formDef = JSON.parse(cleanUp(content));
-    }
+    formDef = extractFormDefinition(block);
   }
   let source = 'aem';
   let rules = true;
