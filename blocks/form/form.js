@@ -243,17 +243,6 @@ const fieldRenderers = {
   heading: createHeading,
 };
 
-function extractFormDefinition(block) {
-  let formDef;
-  const container = block.querySelector('pre');
-  const codeEl = container?.querySelector('code');
-  const content = codeEl?.textContent;
-  if (content) {
-    formDef = JSON.parse(cleanUp(content));
-  }
-  return formDef;
-}
-
 function colSpanDecorator(field, element) {
   const colSpan = field['Column Span'];
   if (colSpan && element) {
