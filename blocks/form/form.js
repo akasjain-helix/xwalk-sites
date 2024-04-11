@@ -10,7 +10,7 @@ import componentDecorater from './mappings.js';
 import DocBasedFormToAF from './transform.js';
 import transferRepeatableDOM from './components/repeat.js';
 import { handleSubmit } from './submit.js';
-import { getSubmitBaseUrl } from './constant.js';
+import { getSubmitBaseUrl, emailPattern } from './constant.js';
 
 export const DELAY_MS = 0;
 let captchaField;
@@ -29,12 +29,12 @@ function setPlaceholder(element, fd) {
 }
 
 const constraintsDef = Object.entries({
-                                        'password|tel|email|text': [['maxLength', 'maxlength'], ['minLength', 'minlength'], 'pattern'],
-                                        'number|range|date': [['maximum', 'Max'], ['minimum', 'Min'], 'step'],
-                                        file: ['accept', 'Multiple'],
-                                        panel: [['maxOccur', 'data-max'], ['minOccur', 'data-min']],
-                                      }).flatMap(([types, constraintDef]) => types.split('|')
-    .map((type) => [type, constraintDef.map((cd) => (Array.isArray(cd) ? cd : [cd, cd]))]));
+  'password|tel|email|text': [['maxLength', 'maxlength'], ['minLength', 'minlength'], 'pattern'],
+  'number|range|date': [['maximum', 'Max'], ['minimum', 'Min'], 'step'],
+  file: ['accept', 'Multiple'],
+  panel: [['maxOccur', 'data-max'], ['minOccur', 'data-min']],
+}).flatMap(([types, constraintDef]) => types.split('|')
+  .map((type) => [type, constraintDef.map((cd) => (Array.isArray(cd) ? cd : [cd, cd]))]));
 
 const constraintsObject = Object.fromEntries(constraintsDef);
 
@@ -43,10 +43,10 @@ function setConstraints(element, fd) {
   const constraints = constraintsObject[renderType];
   if (constraints) {
     constraints
-        .filter(([nm]) => fd[nm])
-        .forEach(([nm, htmlNm]) => {
-          element.setAttribute(htmlNm, fd[nm]);
-        });
+      .filter(([nm]) => fd[nm])
+      .forEach(([nm, htmlNm]) => {
+        element.setAttribute(htmlNm, fd[nm]);
+      });
   }
 }
 
@@ -82,7 +82,7 @@ const createSelect = withFieldWrapper((fd) => {
 
   const addOption = (label, value) => {
     const option = document.createElement('option');
-    option.textContent = label?.trim();
+    option.textContent = label instanceof Object ? label?.value?.trim() : label?.trim();
     option.value = value?.trim() || label?.trim();
     if (fd.value === option.value || (Array.isArray(fd.value) && fd.value.includes(option.value))) {
       option.setAttribute('selected', '');
@@ -96,20 +96,20 @@ const createSelect = withFieldWrapper((fd) => {
   const optionNames = fd?.enumNames ?? options;
 
   if (options.length === 1
-      && options?.[0]?.startsWith('https://')) {
+    && options?.[0]?.startsWith('https://')) {
     const optionsUrl = new URL(options?.[0]);
     // using async to avoid rendering
     if (optionsUrl.hostname.endsWith('hlx.page')
-        || optionsUrl.hostname.endsWith('hlx.live')) {
+    || optionsUrl.hostname.endsWith('hlx.live')) {
       fetch(`${optionsUrl.pathname}${optionsUrl.search}`)
-          .then(async (response) => {
-            const json = await response.json();
-            const values = [];
-            json.data.forEach((opt) => {
-              addOption(opt.Option, opt.Value);
-              values.push(opt.Value || opt.Option);
-            });
+        .then(async (response) => {
+          const json = await response.json();
+          const values = [];
+          json.data.forEach((opt) => {
+            addOption(opt.Option, opt.Value);
+            values.push(opt.Value || opt.Option);
           });
+        });
     }
   } else {
     options.forEach((value, index) => addOption(optionNames?.[index], value));
@@ -175,13 +175,13 @@ function createRadioOrCheckboxGroup(fd) {
     const label = typeof fd.enumNames?.[index] === 'object' ? fd.enumNames[index].value : fd.enumNames?.[index] || value;
     const id = getId(fd.name);
     const field = createRadioOrCheckbox({
-                                          name: fd.name,
-                                          id,
-                                          label: { value: label },
-                                          fieldType: type,
-                                          enum: [value],
-                                          required: fd.required,
-                                        });
+      name: fd.name,
+      id,
+      label: { value: label },
+      fieldType: type,
+      enum: [value],
+      required: fd.required,
+    });
     field.classList.remove('field-wrapper', `field-${fd.name}`);
     const input = field.querySelector('input');
     input.id = id;
@@ -244,7 +244,7 @@ const fieldRenderers = {
 };
 
 function colSpanDecorator(field, element) {
-  const colSpan = field['Column Span'];
+  const colSpan = field['Column Span'] || field.properties?.colspan;
   if (colSpan && element) {
     element.classList.add(`col-${colSpan}`);
   }
@@ -277,7 +277,7 @@ function inputDecorator(field, element) {
       input.disabled = true;
     }
     const fieldType = getHTMLRenderType(field);
-    if (['number', 'date'].includes(fieldType) && (field.displayFormat || field.displayValueExpression)) {
+    if (['number', 'date', 'text', 'email'].includes(fieldType) && (field.displayFormat || field.displayValueExpression)) {
       field.type = fieldType;
       input.setAttribute('edit-value', field.value ?? '');
       input.setAttribute('display-value', field.displayValue ?? '');
@@ -309,6 +309,9 @@ function inputDecorator(field, element) {
     if (field.maxFileSize) {
       input.dataset.maxFileSize = field.maxFileSize;
     }
+    if (input.type === 'email') {
+      input.pattern = emailPattern;
+    }
     setConstraintsMessage(element, field.constraintMessages);
     element.dataset.required = field.required;
   }
@@ -334,8 +337,8 @@ function renderField(fd) {
   return field;
 }
 
-export async function generateFormRendition(panel, container) {
-  const { items = [] } = panel;
+export async function generateFormRendition(panel, container, getItems = (p) => p?.items) {
+  const items = getItems(panel) || [];
   const promises = items.map(async (field) => {
     field.value = field.value ?? '';
     const { fieldType } = field;
@@ -349,7 +352,7 @@ export async function generateFormRendition(panel, container) {
       colSpanDecorator(field, element);
       const decorator = await componentDecorater(field);
       if (field?.fieldType === 'panel') {
-        await generateFormRendition(field, element);
+        await generateFormRendition(field, element, getItems);
         return element;
       }
       if (typeof decorator === 'function') {
@@ -377,11 +380,7 @@ function enableValidation(form) {
   });
 
   form.addEventListener('change', (event) => {
-    const { validity } = event.target;
-    if (validity.valid) {
-      // only to remove the error message
-      checkValidation(event.target);
-    }
+    checkValidation(event.target);
   });
 }
 
@@ -438,7 +437,7 @@ function extractFormDefinition(block) {
   return { container, formDef };
 }
 
-async function fetchForm(pathname) {
+export async function fetchForm(pathname) {
   // get the main form
   let data;
   let resp = await fetch(pathname);
@@ -493,9 +492,15 @@ export default async function decorate(block) {
         form = await afModule.initAdaptiveForm(formDef, createForm);
       }
     }
+    form.dataset.redirectUrl = formDef.redirectUrl || '';
+    form.dataset.thankYouMsg = formDef.thankYouMsg || '';
     form.dataset.action = formDef.action || pathname?.split('.json')[0];
     form.dataset.source = source;
     form.dataset.rules = rules;
+    form.dataset.id = formDef.id;
+    if (source === 'aem' && formDef.properties) {
+      form.dataset.formpath = formDef.properties['fd:path'];
+    }
     container.replaceWith(form);
   }
 }
